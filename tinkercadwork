@@ -1,0 +1,2118 @@
+/*
+ * ═══════════════════════════════════════════════════════════════════════════
+ *                    SMART IRRIGATION SYSTEM v2.0
+ *                    Professional Embedded Version
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * DESCRIPTION:
+ * This is a professional-grade embedded irrigation control system that uses
+ * direct hardware register manipulation instead of Arduino abstraction layers.
+ * The system implements interrupt-driven architecture with priority handling,
+ * timer-based scheduling, watchdog protection, and adaptive control algorithms.
+ * 
+ * TARGET PLATFORM:
+ * - Microcontroller: ATmega328P (Arduino Uno compatible)
+ * - Clock Speed: 16MHz external crystal oscillator
+ * - Architecture: AVR 8-bit RISC
+ * - Memory: 32KB Flash, 2KB SRAM, 1KB EEPROM
+ * 
+ * KEY FEATURES:
+ * ✓ Direct register manipulation (no digitalWrite/digitalRead overhead)
+ * ✓ Hardware timer interrupts (Timer2 for precise timing)
+ * ✓ Watchdog timer for system stability and crash recovery
+ * ✓ Adaptive irrigation control with self-tuning parameters
+ * ✓ Real-time sensor monitoring via ADC
+ * ✓ JSON telemetry output for external monitoring
+ * ✓ LCD display with rotating information screens
+ * ✓ Automatic water tank refill simulation
+ * 
+ * HARDWARE CONNECTIONS:
+ * - A0: Soil Moisture Sensor Zone 1
+ * - A1: Soil Moisture Sensor Zone 2
+ * - A2: TMP36 Temperature Sensor
+ * - A3: Photoresistor (Light Level)
+ * - Pin 8: Piezo Buzzer (PB0)
+ * - Pin 9: Servo Motor (Water Valve)
+ * - Pin 10: Water Pump Relay (PB2)
+ * - Pin 13: Status LED (PB5)
+ * - Pins 2-7: 16x2 LCD Display
+ * 
+ * AUTHOR: Embedded Systems Project
+ * VERSION: 2.0
+ * DATE: 2024
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 1: LIBRARY INCLUDES
+// ═══════════════════════════════════════════════════════════════════════════
+
+#include <avr/io.h>           // AVR I/O registers (DDRB, PORTB, PINB, etc.)
+#include <avr/interrupt.h>    // Interrupt handling (ISR, sei, cli)
+#include <avr/wdt.h>          // Watchdog timer functions
+#include <LiquidCrystal.h>    // LCD display library
+#include <Servo.h>            // Servo motor control library
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 2: PIN DEFINITIONS AND HARDWARE MAPPING
+// ═══════════════════════════════════════════════════════════════════════════
+
+/*
+ * ADC Channel Mapping:
+ * The ATmega328P has a 10-bit ADC (0-1023 range) with 6 analog input channels.
+ * Each channel corresponds to a specific analog pin (A0-A5).
+ * 
+ * Channel 0 = A0 = PC0 (Port C, Pin 0)
+ * Channel 1 = A1 = PC1
+ * Channel 2 = A2 = PC2
+ * Channel 3 = A3 = PC3
+ * Channel 4 = A4 = PC4
+ * Channel 5 = A5 = PC5
+ */
+#define MOISTURE_1_CH 0      // ADC Channel 0 (A0) - First moisture sensor
+#define MOISTURE_2_CH 1      // ADC Channel 1 (A1) - Second moisture sensor
+#define TEMP_SENSOR_CH 2     // ADC Channel 2 (A2) - TMP36 temperature sensor
+#define LIGHT_SENSOR_CH 3    // ADC Channel 3 (A3) - Photoresistor
+
+/*
+ * Digital Pin Mapping to AVR Port/Pin:
+ * Arduino Pin 8  = PB0 (Port B, Bit 0)
+ * Arduino Pin 9  = PB1 (Port B, Bit 1) - Used by Servo library
+ * Arduino Pin 10 = PB2 (Port B, Bit 2)
+ * Arduino Pin 13 = PB5 (Port B, Bit 5)
+ * 
+ * Note: We use direct register names (PB0, PB2, PB5) instead of Arduino pin numbers
+ * because we're manipulating the hardware registers directly.
+ */
+#define SERVO_PIN 9          // Arduino pin 9 (PB1) - Servo control via library
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 3: GLOBAL OBJECTS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/*
+ * LCD Object:
+ * LiquidCrystal(rs, enable, d4, d5, d6, d7)
+ * - RS (Register Select): Pin 7 - Selects command vs data register
+ * - Enable: Pin 6 - Triggers data read/write
+ * - D4-D7: Pins 5,4,3,2 - 4-bit data bus (saves pins vs 8-bit mode)
+ * 
+ * We use 4-bit mode to conserve I/O pins. The LCD internally latches
+ * data in two 4-bit transfers to form complete 8-bit commands/data.
+ */
+LiquidCrystal lcd(7, 6, 5, 4, 3, 2);
+
+/*
+ * Servo Object:
+ * Controls a standard hobby servo motor for the water valve.
+ * - Position 0°: Valve closed (no water flow)
+ * - Position 90°: Valve open (water flows)
+ * 
+ * Note: The Servo library uses Timer1 internally for PWM generation.
+ * This is why we cannot use Timer1 for our own ISR (would cause conflict).
+ * We use Timer2 instead.
+ */
+Servo waterValve;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 4: GLOBAL VARIABLES - SENSOR DATA
+// ═══════════════════════════════════════════════════════════════════════════
+
+/*
+ * Volatile Keyword Explanation:
+ * Variables marked 'volatile' can be modified by ISRs (Interrupt Service Routines).
+ * Without 'volatile', the compiler might optimize away reads/writes because it
+ * doesn't know the value can change unexpectedly. This prevents optimization bugs.
+ * 
+ * Example: Without volatile, the compiler might cache avgMoisture in a register
+ * and never re-read it from RAM, missing updates from the ISR.
+ */
+
+// Moisture sensor readings (0-100%)
+volatile uint16_t moisture1 = 0;      // Zone 1 soil moisture percentage
+volatile uint16_t moisture2 = 0;      // Zone 2 soil moisture percentage
+volatile uint16_t avgMoisture = 50;   // Average of both zones
+
+// Environmental sensors
+volatile int16_t temperature = 25;    // Temperature in Celsius (-40 to 125)
+volatile uint16_t lightLevel = 50;    // Light level percentage (0=dark, 100=bright)
+
+// System resources
+volatile uint8_t waterLevel = 100;    // Water tank level percentage (0-100)
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 5: GLOBAL VARIABLES - SYSTEM STATE
+// ═══════════════════════════════════════════════════════════════════════════
+
+/*
+ * Pump Status:
+ * true = pump is currently running (water flowing)
+ * false = pump is off (no water flow)
+ * 
+ * This boolean controls the physical pump relay and servo valve position.
+ */
+volatile bool pumpStatus = false;
+
+/*
+ * Irrigation Cycle Counter:
+ * Tracks total number of completed irrigation cycles since system startup.
+ * Used for statistics and performance monitoring.
+ */
+volatile uint16_t irrigationCycles = 0;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 6: GLOBAL VARIABLES - ADAPTIVE CONTROL PARAMETERS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/*
+ * Adaptive Irrigation Parameters:
+ * These values are NOT constant - they change over time as the system
+ * learns from its performance. This is the "intelligence" of the system.
+ * 
+ * The adaptive algorithm adjusts these based on:
+ * - Current moisture vs target
+ * - System stability
+ * - Environmental conditions (light, temperature)
+ * - Historical performance
+ */
+
+// moistureThreshold: Below this level, irrigation starts
+// Range: 25-55%, adjusts based on performance
+// If soil is consistently too wet → threshold increases (less watering)
+// If soil is consistently too dry → threshold decreases (more watering)
+uint8_t moistureThreshold = 40;
+
+// moistureTarget: The ideal moisture level we're aiming for
+// Range: 55-70%, adjusts based on environmental conditions
+// Daytime (high light) → higher target (more evaporation expected)
+// Nighttime (low light) → lower target (less evaporation)
+uint8_t moistureTarget = 65;
+
+// pumpDuration: How long the pump runs per cycle (in seconds)
+// Range: 2-10 seconds, adjusts based on stability
+// Stable system → shorter duration (efficient)
+// Unstable system → longer duration (aggressive correction)
+uint8_t pumpDuration = 5;
+
+// cooldownPeriod: Minimum wait time between irrigation cycles (in seconds)
+// Range: 10-120 seconds
+// This prevents over-watering and allows soil to absorb water
+uint8_t cooldownPeriod = 10;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 7: GLOBAL VARIABLES - TIMING AND SCHEDULING
+// ═══════════════════════════════════════════════════════════════════════════
+
+/*
+ * System Timing:
+ * All timing is based on systemSeconds, which is incremented by Timer2 ISR.
+ * This provides a consistent time base for all scheduling decisions.
+ */
+
+// systemSeconds: Total seconds since system startup (uptime counter)
+// Increments every second via Timer2 overflow counting
+volatile uint16_t systemSeconds = 0;
+
+// lastIrrigationStop: Timestamp when the pump was last turned off
+// Used to calculate cooldown period: (systemSeconds - lastIrrigationStop)
+volatile uint16_t lastIrrigationStop = 0;
+
+// currentPumpDuration: Counter for how long current pump cycle has run
+// Increments every second while pump is ON
+// When this reaches activePumpDuration, pump stops
+volatile uint8_t currentPumpDuration = 0;
+
+// activePumpDuration: Locked duration for current pump cycle
+// This is set when pump starts and doesn't change during the cycle
+// This prevents issues if pumpDuration is adjusted mid-cycle
+volatile uint8_t activePumpDuration = 5;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 8: GLOBAL VARIABLES - INTERRUPT FLAGS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/*
+ * ISR Flag System:
+ * 
+ * WHY FLAGS INSTEAD OF DOING WORK IN ISR?
+ * ISRs (Interrupt Service Routines) should be SHORT and FAST because:
+ * 1. Other interrupts are blocked during ISR execution
+ * 2. Long ISRs cause system responsiveness issues
+ * 3. Complex operations in ISR can cause timing problems
+ * 
+ * SOLUTION: Set a flag in the ISR, process the flag in main loop
+ * - ISR: ~5 CPU cycles (just set a bit)
+ * - Main loop: Takes as long as needed (not blocking interrupts)
+ * 
+ * Each bit in isrFlags represents a different event that needs processing.
+ */
+volatile uint8_t isrFlags = 0;
+
+// Bit 0: One-second timer tick occurred
+// Set by Timer2 ISR when 61 overflows have been counted (≈1 second)
+#define FLAG_ONE_SECOND     (1<<0)
+
+// Bit 1: ADC update requested
+// Set by Timer2 overflow ISR for fast sensor sampling
+#define FLAG_ADC_UPDATE     (1<<1)
+
+/*
+ * Timer2 Overflow Counter:
+ * Timer2 overflows approximately 61 times per second.
+ * We count these overflows to create a 1-second time base.
+ * 
+ * Calculation:
+ * CPU Clock = 16,000,000 Hz
+ * Timer2 Prescaler = 1024
+ * Timer2 is 8-bit, counts 0-255
+ * Overflow Frequency = 16,000,000 / 1024 / 256 ≈ 61 Hz
+ * 
+ * So counting to 61 gives us approximately 1 second.
+ */
+volatile uint8_t timer2OverflowCount = 0;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 9: GLOBAL VARIABLES - PERFORMANCE METRICS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/*
+ * Performance Monitoring:
+ * The system tracks its own performance to optimize behavior.
+ * These metrics help the adaptive algorithm make better decisions.
+ */
+
+// performanceScore: Overall system health score (0-100)
+// - Increases when moisture is in optimal range
+// - Decreases when moisture is too high or too low
+// - Used to track long-term system effectiveness
+uint8_t performanceScore = 100;
+
+// isDaytime: Environmental flag based on light level
+// - true: Light > 50% (day mode - higher evaporation)
+// - false: Light ≤ 50% (night mode - lower evaporation)
+// Affects target moisture levels and irrigation aggressiveness
+bool isDaytime = true;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 10: GLOBAL VARIABLES - LCD MANAGEMENT
+// ═══════════════════════════════════════════════════════════════════════════
+
+/*
+ * LCD Screen Rotation:
+ * The 16x2 LCD can only show limited information at once.
+ * We rotate through multiple "screens" to display all system data.
+ * 
+ * Screen 0: Moisture and pump status
+ * Screen 1: Individual zones and environmental data
+ * Screen 2: Cycle count and performance
+ * 
+ * lcdScreen cycles through 0, 1, 2, 0, 1, 2, ...
+ */
+volatile uint8_t lcdScreen = 0;
+
+// lcdUpdateCounter: Counts seconds between LCD updates
+// LCD updates every 3 seconds to avoid excessive flickering
+volatile uint16_t lcdUpdateCounter = 0;
+
+// wdtResetCounter: Counts seconds between watchdog resets
+// Watchdog must be reset within 2 seconds to prevent system reset
+volatile uint16_t wdtResetCounter = 0;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 11: HARDWARE INITIALIZATION - PORT CONFIGURATION
+// ═══════════════════════════════════════════════════════════════════════════
+
+/*
+ * initPorts() - Configure I/O Port Directions
+ * 
+ * AVR PORT REGISTERS EXPLAINED:
+ * 
+ * Each I/O port has THREE registers:
+ * 
+ * 1. DDRx (Data Direction Register):
+ *    - Bit = 0: Pin is INPUT
+ *    - Bit = 1: Pin is OUTPUT
+ *    Example: DDRB |= (1<<DDB5) makes PB5 an output
+ * 
+ * 2. PORTx (Data Register):
+ *    - For OUTPUT pins: Sets pin HIGH (1) or LOW (0)
+ *    - For INPUT pins: Enables (1) or disables (0) internal pull-up resistor
+ *    Example: PORTB |= (1<<PB5) sets PB5 high (if output) or enables pullup (if input)
+ * 
+ * 3. PINx (Input Pins Register):
+ *    - Read-only, shows current state of pins
+ *    Example: if (PINB & (1<<PB5)) checks if PB5 is high
+ * 
+ * BIT MANIPULATION OPERATORS:
+ * |= (OR-equals): Sets specific bits to 1 without affecting others
+ * &= (AND-equals): Clears specific bits to 0 without affecting others
+ * ~ (NOT): Inverts all bits
+ * << (Left shift): Creates a bit mask at specific position
+ * 
+ * Example: DDRB |= (1<<DDB5)
+ * - (1<<DDB5) creates 0b00100000 (bit 5 set)
+ * - |= ORs this with DDRB, setting bit 5 to 1
+ * - Result: PB5 configured as output, other pins unchanged
+ */
+void initPorts() {
+    // ═══════════════════════════════════════════════════════════════════
+    // PORT B CONFIGURATION (Arduino pins 8-13)
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Port B Pin Mapping:
+     * PB0 = Arduino Pin 8  = Buzzer (OUTPUT)
+     * PB1 = Arduino Pin 9  = Servo (handled by Servo library)
+     * PB2 = Arduino Pin 10 = Water Pump Relay (OUTPUT)
+     * PB3 = Arduino Pin 11 = Unused
+     * PB4 = Arduino Pin 12 = Unused
+     * PB5 = Arduino Pin 13 = Status LED (OUTPUT)
+     */
+    
+    // Configure Pin 8 (PB0) as OUTPUT for buzzer
+    // DDB0 is the bit position for PB0 in DDRB register
+    DDRB |= (1<<DDB0);
+    
+    // Configure Pin 10 (PB2) as OUTPUT for pump relay
+    DDRB |= (1<<DDB2);
+    
+    // Configure Pin 13 (PB5) as OUTPUT for status LED
+    DDRB |= (1<<DDB5);
+    
+    // Set all outputs to LOW (OFF) initially
+    // This ensures pump, buzzer, and LED start in OFF state
+    PORTB &= ~(1<<PB0);   // Buzzer OFF
+    PORTB &= ~(1<<PB2);   // Pump OFF
+    PORTB &= ~(1<<PB5);   // LED OFF
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // PORT C CONFIGURATION (Arduino analog pins A0-A5)
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Port C is used for ADC (Analog-to-Digital Converter) inputs.
+     * All pins are configured as inputs (default state).
+     * No pull-ups needed as analog sensors drive these pins.
+     */
+    // Note: DDRC and PORTC are implicitly 0x00 (all inputs, no pullups)
+    // This is the default state, so no explicit configuration needed
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // PORT D CONFIGURATION (Arduino pins 0-7)
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Port D Pin Mapping:
+     * PD0 = Arduino Pin 0 = Serial RX (handled by Serial library)
+     * PD1 = Arduino Pin 1 = Serial TX (handled by Serial library)
+     * PD2 = Arduino Pin 2 = LCD data pin
+     * PD3 = Arduino Pin 3 = LCD data pin
+     * PD4 = Arduino Pin 4 = LCD data pin
+     * PD5 = Arduino Pin 5 = LCD data pin
+     * PD6 = Arduino Pin 6 = LCD enable
+     * PD7 = Arduino Pin 7 = LCD RS
+     * 
+     * Note: LCD pins are configured by the LiquidCrystal library
+     * in lcd.begin(), so we don't need to configure them here.
+     */
+    // Port D configuration is handled by LCD and Serial libraries
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 12: HARDWARE INITIALIZATION - ADC CONFIGURATION
+// ═══════════════════════════════════════════════════════════════════════════
+
+/*
+ * initADC() - Initialize Analog-to-Digital Converter
+ * 
+ * ADC OVERVIEW:
+ * The ATmega328P has a 10-bit successive approximation ADC.
+ * - Resolution: 10 bits (0-1023)
+ * - Channels: 6 single-ended inputs (ADC0-ADC5)
+ * - Reference voltage: Selectable (AVCC, internal 1.1V, or external AREF)
+ * 
+ * ADC REGISTERS:
+ * 
+ * ADMUX (ADC Multiplexer Selection Register):
+ * - Bits 7:6 (REFS1:0): Reference voltage selection
+ * - Bit 5 (ADLAR): Left adjust result
+ * - Bits 3:0 (MUX3:0): Input channel selection
+ * 
+ * ADCSRA (ADC Control and Status Register A):
+ * - Bit 7 (ADEN): ADC Enable
+ * - Bit 6 (ADSC): ADC Start Conversion
+ * - Bit 5 (ADATE): ADC Auto Trigger Enable
+ * - Bit 4 (ADIF): ADC Interrupt Flag
+ * - Bit 3 (ADIE): ADC Interrupt Enable
+ * - Bits 2:0 (ADPS2:0): ADC Prescaler Select
+ * 
+ * ADC CLOCK:
+ * ADC requires a clock between 50kHz and 200kHz for full resolution.
+ * We use a prescaler to divide the system clock (16MHz) down to this range.
+ * Prescaler 128: 16MHz / 128 = 125kHz (within optimal range)
+ */
+void initADC() {
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 1: Select Reference Voltage
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Reference Voltage Options:
+     * REFS1:0 = 00: AREF (external reference on AREF pin)
+     * REFS1:0 = 01: AVCC with external capacitor at AREF pin
+     * REFS1:0 = 10: Reserved
+     * REFS1:0 = 11: Internal 1.1V reference
+     * 
+     * We use AVCC (5V) as reference because:
+     * - Our sensors output 0-5V
+     * - Provides full 10-bit resolution across sensor range
+     * - Most common configuration for 5V systems
+     */
+    ADMUX = (1<<REFS0);  // REFS1:0 = 01, AVCC reference
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 2: Enable ADC and Set Prescaler
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Prescaler Selection:
+     * ADPS2:0 = 000: Division factor 2
+     * ADPS2:0 = 001: Division factor 2
+     * ADPS2:0 = 010: Division factor 4
+     * ADPS2:0 = 011: Division factor 8
+     * ADPS2:0 = 100: Division factor 16
+     * ADPS2:0 = 101: Division factor 32
+     * ADPS2:0 = 110: Division factor 64
+     * ADPS2:0 = 111: Division factor 128
+     * 
+     * With 16MHz clock and prescaler 128:
+     * ADC clock = 16MHz / 128 = 125kHz
+     * This is within the optimal 50-200kHz range.
+     * 
+     * Conversion time = 13 ADC clock cycles for first conversion
+     *                 = 13 / 125kHz = 104 microseconds
+     */
+    ADCSRA = (1<<ADEN) |                          // Enable ADC
+             (1<<ADPS2) | (1<<ADPS1) | (1<<ADPS0); // Prescaler 128
+    
+    // Note: We do NOT enable ADC interrupt (ADIE) because we'll poll for completion
+    // Note: We do NOT enable auto-trigger (ADATE) because we'll manually start conversions
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 13: HARDWARE INITIALIZATION - TIMER2 CONFIGURATION
+// ═══════════════════════════════════════════════════════════════════════════
+
+/*
+ * initTimer2() - Configure Timer2 for 1-Second System Tick
+ * 
+ * TIMER OVERVIEW:
+ * Timer2 is an 8-bit timer/counter that counts from 0 to 255.
+ * When it overflows (255→0), it can trigger an interrupt.
+ * 
+ * WHY TIMER2 INSTEAD OF TIMER1?
+ * Timer1 is used internally by the Servo library for PWM generation.
+ * If we tried to use Timer1, we'd conflict with the Servo library.
+ * Timer2 is available for our use.
+ * 
+ * TIMING CALCULATION:
+ * CPU Clock: 16,000,000 Hz
+ * Timer2 Prescaler: 1024
+ * Timer2 Overflow: Every 256 counts (0-255)
+ * 
+ * Overflow Frequency = CPU_Clock / Prescaler / 256
+ *                    = 16,000,000 / 1024 / 256
+ *                    = 61.035 Hz (approximately 61 times per second)
+ * 
+ * Overflow Period = 1 / 61.035 = 16.384 milliseconds
+ * 
+ * To get 1 second: Count 61 overflows
+ * 61 × 16.384ms = 999.4ms ≈ 1 second
+ * 
+ * TIMER2 REGISTERS:
+ * 
+ * TCCR2A (Timer/Counter Control Register A):
+ * - WGM21:20: Waveform Generation Mode (we use Normal mode = 00)
+ * 
+ * TCCR2B (Timer/Counter Control Register B):
+ * - CS22:20: Clock Select (prescaler)
+ *   000 = No clock (timer stopped)
+ *   001 = No prescaling (clk/1)
+ *   010 = clk/8
+ *   011 = clk/32
+ *   100 = clk/64
+ *   101 = clk/128
+ *   110 = clk/256
+ *   111 = clk/1024 ← We use this
+ * 
+ * TIMSK2 (Timer/Counter 2 Interrupt Mask Register):
+ * - TOIE2: Timer/Counter2 Overflow Interrupt Enable
+ */
+void initTimer2() {
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 1: Set Timer Mode to Normal
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Normal Mode: Timer counts from 0 to 255, then overflows back to 0.
+     * This is the simplest mode, no compare matching or PWM.
+     * WGM22:20 = 000 (default)
+     */
+    TCCR2A = 0x00;  // Normal mode (WGM21:20 = 00)
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 2: Set Prescaler to 1024
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * CS22:20 = 111 → Prescaler 1024
+     * This gives us approximately 61 overflows per second.
+     */
+    TCCR2B = (1<<CS22) | (1<<CS21) | (1<<CS20);  // Prescaler 1024
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 3: Enable Overflow Interrupt
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * When TOIE2 is set, an interrupt is generated every time Timer2
+     * overflows (goes from 255 to 0). This calls ISR(TIMER2_OVF_vect).
+     */
+    TIMSK2 = (1<<TOIE2);  // Enable Timer2 Overflow Interrupt
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 14: HARDWARE INITIALIZATION - WATCHDOG TIMER
+// ═══════════════════════════════════════════════════════════════════════════
+
+/*
+ * initWatchdog() - Configure Watchdog Timer for System Stability
+ * 
+ * WATCHDOG OVERVIEW:
+ * The watchdog timer is a hardware safety feature that prevents system lockup.
+ * It's an independent timer that must be periodically "reset" (or "fed").
+ * If the timer expires without being reset, it triggers an action (reset or interrupt).
+ * 
+ * WHY USE WATCHDOG?
+ * If the software enters an infinite loop or hangs due to a bug, the watchdog
+ * will timeout and either reset the system or trigger recovery code.
+ * This ensures the system doesn't stay stuck forever.
+ * 
+ * WATCHDOG MODES:
+ * 1. Reset Mode: System resets when watchdog expires (loses all state)
+ * 2. Interrupt Mode: ISR is called when watchdog expires (can recover gracefully)
+ * 3. Interrupt + Reset Mode: ISR first, then reset if not cleared
+ * 
+ * We use Interrupt Mode so we can:
+ * - Log the event
+ * - Safely shut down pump
+ * - Continue operation after recovery
+ * 
+ * TIMEOUT PERIODS:
+ * WDP3:0 = 0000: 16ms
+ * WDP3:0 = 0001: 32ms
+ * WDP3:0 = 0010: 64ms
+ * WDP3:0 = 0011: 125ms
+ * WDP3:0 = 0100: 250ms
+ * WDP3:0 = 0101: 500ms
+ * WDP3:0 = 0110: 1 second
+ * WDP3:0 = 0111: 2 seconds ← We use this
+ * WDP3:0 = 1000: 4 seconds
+ * WDP3:0 = 1001: 8 seconds
+ * 
+ * WATCHDOG SAFETY PROCEDURE:
+ * Changing watchdog configuration requires a special timed sequence
+ * to prevent accidental modifications.
+ */
+void initWatchdog() {
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 1: Disable Interrupts During Configuration
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * cli() - Clear Interrupt Flag
+     * Disables all interrupts globally. This is critical because the
+     * watchdog configuration sequence must complete within 4 clock cycles.
+     * An interrupt in the middle would break the sequence.
+     */
+    cli();  // Disable global interrupts
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 2: Reset Watchdog Timer
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * wdt_reset() - Reset Watchdog Timer
+     * This resets the watchdog counter to 0, preventing timeout.
+     * We do this before changing settings to ensure clean state.
+     */
+    wdt_reset();  // Reset watchdog counter
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 3: Enter Configuration Mode (Timed Sequence)
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * WDCE (Watchdog Change Enable) and WDE (Watchdog Enable) must both
+     * be set to 1 to unlock the watchdog for configuration.
+     * 
+     * IMPORTANT: After setting WDCE=1, you have exactly 4 clock cycles
+     * to make changes to WDTCSR. After that, WDCE automatically clears.
+     * This is a safety feature to prevent accidental watchdog changes.
+     */
+    WDTCSR |= (1<<WDCE) | (1<<WDE);  // Unlock watchdog configuration
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 4: Set Timeout and Mode (Must happen within 4 cycles!)
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Configure Watchdog:
+     * - WDIE = 1: Enable Interrupt mode (not reset mode)
+     * - WDP2:0 = 111: 2 second timeout
+     * - WDE = 0: Disable reset mode (interrupt only)
+     * 
+     * Note: We write the entire register value, not just setting bits,
+     * because we need to clear WDE (set to 0) to disable reset mode.
+     */
+    WDTCSR = (1<<WDIE) |                          // Interrupt mode enabled
+             (1<<WDP2) | (1<<WDP1) | (1<<WDP0);   // 2 second timeout
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 5: Re-enable Interrupts
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * sei() - Set Interrupt Flag
+     * Re-enables all interrupts globally. The system will now respond
+     * to Timer2 overflow, watchdog timeout, and other interrupt sources.
+     */
+    sei();  // Enable global interrupts
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 15: INTERRUPT SERVICE ROUTINES (ISRs)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/*
+ * ISR OVERVIEW:
+ * 
+ * Interrupt Service Routines are special functions that execute automatically
+ * when a hardware event occurs. They "interrupt" the main program flow.
+ * 
+ * KEY ISR RULES:
+ * 1. Keep ISRs as SHORT and FAST as possible
+ * 2. Avoid blocking operations (delays, waiting loops)
+ * 3. Use volatile for shared variables
+ * 4. Set flags for main loop to process complex operations
+ * 5. Don't call functions that aren't ISR-safe
+ * 
+ * WHY FLAGS?
+ * Instead of doing complex work in the ISR, we just set a flag and return.
+ * The main loop checks flags and does the actual work. This keeps ISRs fast
+ * and prevents blocking other interrupts.
+ */
+
+/*
+ * ISR(TIMER2_OVF_vect) - Timer2 Overflow Interrupt Handler
+ * 
+ * This ISR is called approximately 61 times per second (every 16.4ms)
+ * when Timer2 overflows from 255 to 0.
+ * 
+ * PURPOSE:
+ * 1. Trigger sensor reading (FLAG_ADC_UPDATE)
+ * 2. Count overflows to create 1-second time base
+ * 3. When 61 overflows counted, trigger 1-second processing
+ * 4. Increment system time counters
+ * 5. Track pump duration
+ * 6. Reset watchdog timer to prevent system reset
+ */
+ISR(TIMER2_OVF_vect) {
+    // ═══════════════════════════════════════════════════════════════════
+    // TASK 1: Set ADC Update Flag (for sensor reading)
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Every overflow (~61 times/sec), we flag for sensor update.
+     * Main loop will call updateSensors() to read ADC values.
+     * This gives us fast sensor sampling without blocking in ISR.
+     */
+    isrFlags |= FLAG_ADC_UPDATE;
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // TASK 2: Count Overflows for 1-Second Timing
+    // ═══════════════════════════════════════════════════════════════════
+    
+    timer2OverflowCount++;  // Increment overflow counter
+    
+    // Check if 1 second has elapsed (61 overflows ≈ 1 second)
+    if (timer2OverflowCount >= 61) {
+        timer2OverflowCount = 0;  // Reset counter for next second
+        
+        // ═══════════════════════════════════════════════════════════════
+        // TASK 3: Set 1-Second Processing Flag
+        // ═══════════════════════════════════════════════════════════════
+        
+        /*
+         * This flag triggers all time-based operations:
+         * - Update water level
+         * - Control irrigation
+         * - Adapt parameters
+         * - Update LCD
+         * - Send JSON telemetry
+         */
+        isrFlags |= FLAG_ONE_SECOND;
+        
+        // ═══════════════════════════════════════════════════════════════
+        // TASK 4: Increment Time Counters
+        // ═══════════════════════════════════════════════════════════════
+        
+        systemSeconds++;       // Total system uptime
+        lcdUpdateCounter++;    // Time since last LCD update
+        wdtResetCounter++;     // Time since last watchdog reset
+        
+        // ═══════════════════════════════════════════════════════════════
+        // TASK 5: Track Pump Duration
+        // ═══════════════════════════════════════════════════════════════
+        
+        /*
+         * If pump is running, increment the duration counter.
+         * When this reaches activePumpDuration, pump will be stopped.
+         */
+        if (pumpStatus) {
+            currentPumpDuration++;  // One more second of pumping
+        }
+        
+        // ═══════════════════════════════════════════════════════════════
+        // TASK 6: Reset Watchdog Timer
+        // ═══════════════════════════════════════════════════════════════
+        
+        /*
+         * CRITICAL: Must reset watchdog before 2-second timeout!
+         * We reset it every 1 second (well within the 2-second window).
+         * 
+         * If this doesn't execute (system hung), watchdog will trigger
+         * after 2 seconds and call ISR(WDT_vect) for recovery.
+         */
+        if (wdtResetCounter >= 1) {
+            wdt_reset();          // Reset watchdog counter
+            wdtResetCounter = 0;  // Reset our tracking counter
+        }
+    }
+}
+
+/*
+ * ISR(WDT_vect) - Watchdog Timer Interrupt Handler
+ * 
+ * This ISR is called if the watchdog timer expires without being reset.
+ * This typically indicates the system has hung or is unresponsive.
+ * 
+ * PURPOSE:
+ * 1. Put system into safe state (turn off pump)
+ * 2. Reduce performance score (track that a problem occurred)
+ * 3. Reset watchdog to prevent immediate re-trigger
+ * 
+ * Note: This should RARELY be called if the system is working correctly.
+ * Frequent watchdog triggers indicate a serious software bug.
+ */
+ISR(WDT_vect) {
+    // ═══════════════════════════════════════════════════════════════════
+    // TASK 1: Emergency Safe State
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Turn off pump immediately to prevent flooding or damage.
+     * This is done directly in ISR for immediate effect.
+     */
+    pumpStatus = false;       // Update software state
+    PORTB &= ~(1<<PB2);       // Turn off pump relay (hardware level)
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // TASK 2: Penalize Performance Score
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Decrease performance score to track that a problem occurred.
+     * If this happens frequently, the score will drop significantly,
+     * indicating system instability.
+     */
+    performanceScore = (performanceScore > 10) ? performanceScore - 10 : 0;
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // TASK 3: Reset Watchdog for Continued Operation
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Reset the watchdog timer so the system can continue running.
+     * Without this, the watchdog would trigger again immediately
+     * (since we're in interrupt mode, not reset mode).
+     */
+    wdt_reset();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 16: ADC READING FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/*
+ * readADC() - Read Single ADC Channel
+ * 
+ * This function performs a single ADC conversion on the specified channel
+ * and returns the 10-bit result (0-1023).
+ * 
+ * HOW ADC CONVERSION WORKS:
+ * 1. Select the input channel (ADMUX register)
+ * 2. Start conversion by setting ADSC bit
+ * 3. Wait for conversion to complete (ADSC clears automatically)
+ * 4. Read result from ADC register
+ * 
+ * CONVERSION TIME:
+ * With 125kHz ADC clock, conversion takes:
+ * - First conversion: 25 ADC clock cycles (200µs)
+ * - Subsequent: 13 ADC clock cycles (104µs)
+ * 
+ * PARAMETERS:
+ * channel - ADC channel number (0-5 for ATmega328P)
+ *           0 = A0, 1 = A1, 2 = A2, etc.
+ * 
+ * RETURNS:
+ * 10-bit ADC value (0-1023)
+ * 0 = 0V input
+ * 1023 = VREF input (5V in our case)
+ */
+uint16_t readADC(uint8_t channel) {
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 1: Select ADC Channel
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * ADMUX lower 4 bits (MUX3:0) select the input channel.
+     * We preserve the upper 4 bits (reference voltage and ADLAR settings)
+     * and only change the lower 4 bits (channel selection).
+     * 
+     * Masking: (ADMUX & 0xF0) keeps upper 4 bits
+     * ORing: | (channel & 0x0F) sets lower 4 bits to channel number
+     */
+    ADMUX = (ADMUX & 0xF0) | (channel & 0x0F);
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 2: Start ADC Conversion
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Setting ADSC (ADC Start Conversion) bit initiates a conversion.
+     * The hardware automatically begins sampling the input.
+     */
+    ADCSRA |= (1<<ADSC);
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 3: Wait for Conversion to Complete
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * ADSC bit automatically clears when conversion is complete.
+     * We poll this bit, waiting for it to become 0.
+     * 
+     * Note: This is a blocking wait (~104µs). In more advanced systems,
+     * you might use ADC interrupt to avoid blocking.
+     */
+    while (ADCSRA & (1<<ADSC));  // Wait while ADSC is 1
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 4: Return Result
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * ADC register contains the 10-bit result.
+     * Lower 8 bits in ADCL, upper 2 bits in ADCH.
+     * Reading ADC as 16-bit automatically combines both.
+     */
+    return ADC;
+}
+
+/*
+ * updateSensors() - Read All Sensors and Update Global Variables
+ * 
+ * This function reads all four analog sensors and converts raw ADC values
+ * to meaningful units (percentages and degrees).
+ * 
+ * SENSOR MAPPING:
+ * 
+ * SOIL MOISTURE SENSORS:
+ * - Resistive type (measures electrical resistance of soil)
+ * - Wet soil = Low resistance = Low ADC value
+ * - Dry soil = High resistance = High ADC value
+ * - Raw range: 0 (wet) to 1023 (dry)
+ * - We invert this to get 0% (dry) to 100% (wet)
+ * 
+ * TMP36 TEMPERATURE SENSOR:
+ * - Analog voltage output, 10mV per degree Celsius
+ * - 500mV offset at 0°C
+ * - Formula: Temperature = (Voltage_mV - 500) / 10
+ * - Example: At 25°C, voltage = 500 + 25*10 = 750mV
+ * 
+ * PHOTORESISTOR (LIGHT SENSOR):
+ * - Resistance decreases with increasing light
+ * - In voltage divider: More light = Higher voltage = Higher ADC
+ * - Mapped to 0% (dark) to 100% (bright)
+ */
+void updateSensors() {
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 1: Read Raw ADC Values
+    // ═══════════════════════════════════════════════════════════════════
+    
+    uint16_t raw1 = readADC(MOISTURE_1_CH);      // Read moisture sensor 1
+    uint16_t raw2 = readADC(MOISTURE_2_CH);      // Read moisture sensor 2
+    uint16_t rawTemp = readADC(TEMP_SENSOR_CH);  // Read temperature sensor
+    uint16_t rawLight = readADC(LIGHT_SENSOR_CH); // Read light sensor
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 2: Process Moisture Sensors
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Moisture Mapping (INVERTED):
+     * TinkerCAD moisture sensors:
+     * - Slider at bottom (dry) = HIGH ADC value (1023)
+     * - Slider at top (wet) = LOW ADC value (0)
+     * 
+     * map(value, fromLow, fromHigh, toLow, toHigh)
+     * map(raw, 0, 1023, 100, 0) inverts the scale:
+     * - Raw 0 (wet) → 100% moisture
+     * - Raw 1023 (dry) → 0% moisture
+     */
+    moisture1 = map(raw1, 0, 1023, 100, 0);
+    moisture2 = map(raw2, 0, 1023, 100, 0);
+    avgMoisture = (moisture1 + moisture2) / 2;  // Average of both zones
+    
+    // Constrain to valid range (handle any mapping errors)
+    moisture1 = constrain(moisture1, 0, 100);
+    moisture2 = constrain(moisture2, 0, 100);
+    avgMoisture = constrain(avgMoisture, 0, 100);
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 3: Process Temperature Sensor (TMP36)
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * TMP36 Conversion:
+     * 1. Convert ADC value to millivolts
+     *    voltage_mV = (rawADC / 1023) * 5000
+     *    
+     * 2. Convert millivolts to temperature
+     *    temp_C = (voltage_mV - 500) / 10
+     * 
+     * Example: At 25°C
+     * - Voltage = 500 + (25 * 10) = 750mV
+     * - ADC value = (750 / 5000) * 1023 ≈ 153
+     * - Back-calc: voltage = (153 / 1023) * 5000 = 748mV
+     * - Temperature = (748 - 500) / 10 = 24.8°C ≈ 25°C
+     * 
+     * Note: We use int32_t for intermediate calculation to avoid overflow.
+     * 5000 * 1023 = 5,115,000 which fits in int32_t but not int16_t.
+     */
+    int32_t voltage_mV = ((int32_t)rawTemp * 5000) / 1023;
+    temperature = (voltage_mV - 500) / 10;
+    temperature = constrain(temperature, -40, 125);  // TMP36 range
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 4: Process Light Sensor
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Light Level Mapping:
+     * Higher ADC value = More light = Higher percentage
+     * Simple linear mapping from 0-1023 to 0-100%
+     */
+    lightLevel = map(rawLight, 0, 1023, 0, 100);
+    lightLevel = constrain(lightLevel, 0, 100);
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 5: Determine Day/Night Based on Light Level
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Simple threshold-based day/night detection:
+     * - Light > 50%: Daytime (more evaporation, higher water needs)
+     * - Light ≤ 50%: Nighttime (less evaporation, lower water needs)
+     */
+    isDaytime = (lightLevel > 50);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 17: IRRIGATION CONTROL FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/*
+ * startIrrigation() - Begin Irrigation Cycle
+ * 
+ * This function activates all irrigation hardware:
+ * - Turns on water pump
+ * - Opens servo valve
+ * - Turns on status LED
+ * - Sounds buzzer notification
+ * - Records start time for duration tracking
+ * 
+ * HARDWARE ACTIONS:
+ * 1. Pump relay (Pin 10/PB2): Set HIGH to power pump
+ * 2. Status LED (Pin 13/PB5): Set HIGH to indicate pump running
+ * 3. Servo valve (Pin 9): Move to 90° to open water flow
+ * 4. Buzzer (Pin 8/PB0): Brief beep to indicate start
+ */
+void startIrrigation() {
+    // ═══════════════════════════════════════════════════════════════════
+    // GUARD: Prevent Multiple Start Calls
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * If pump is already running, don't start again.
+     * This prevents issues like resetting the duration counter mid-cycle.
+     */
+    if (pumpStatus) return;  // Already running, exit early
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 1: Update Software State
+    // ═══════════════════════════════════════════════════════════════════
+    
+    pumpStatus = true;                  // Mark pump as running
+    currentPumpDuration = 0;            // Reset duration counter
+    activePumpDuration = pumpDuration;  // Lock duration for this cycle
+    
+    /*
+     * Why lock activePumpDuration?
+     * The adaptive algorithm may change pumpDuration mid-cycle.
+     * We don't want the pump to suddenly stop or run longer than expected.
+     * By locking it, we ensure consistent behavior for the entire cycle.
+     */
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 2: Activate Hardware - Turn ON Pump
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Direct register manipulation to turn on pump:
+     * PORTB |= (1<<PB2) sets bit PB2 to 1 (HIGH)
+     * This energizes the relay, which powers the pump motor.
+     * 
+     * Compare to Arduino: digitalWrite(10, HIGH);
+     * Register manipulation is faster (1-2 cycles vs 50+ cycles)
+     */
+    PORTB |= (1<<PB2);  // Set PB2 HIGH - Pump ON
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 3: Activate Hardware - Turn ON Status LED
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Visual indicator that irrigation is active.
+     * Useful for monitoring system state at a glance.
+     */
+    PORTB |= (1<<PB5);  // Set PB5 HIGH - LED ON
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 4: Activate Hardware - Open Servo Valve
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Servo at 90° = Valve open = Water flows through
+     * The Servo library handles PWM generation on Pin 9.
+     */
+    waterValve.write(90);  // Open valve
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 5: Audio Feedback - Single Beep
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Brief audible notification that irrigation has started.
+     * 100ms beep is short enough to be non-intrusive.
+     */
+    PORTB |= (1<<PB0);   // Buzzer ON
+    delay(100);          // 100ms duration
+    PORTB &= ~(1<<PB0);  // Buzzer OFF
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 6: Update Statistics
+    // ═══════════════════════════════════════════════════════════════════
+    
+    irrigationCycles++;  // Increment total cycle counter
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 7: Log to Serial Monitor
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Output diagnostic information for monitoring/debugging.
+     * Shows planned duration and current conditions at start.
+     */
+    Serial.println(">>> PUMP ON <<<");
+    Serial.print("Duration: ");
+    Serial.print(activePumpDuration);
+    Serial.print("s | Moisture: ");
+    Serial.print(avgMoisture);
+    Serial.print("% | Threshold: ");
+    Serial.print(moistureThreshold);
+    Serial.println("%");
+}
+
+/*
+ * stopIrrigation() - End Irrigation Cycle
+ * 
+ * This function deactivates all irrigation hardware:
+ * - Turns off water pump
+ * - Closes servo valve
+ * - Turns off status LED
+ * - Sounds buzzer notification
+ * - Records stop time for cooldown calculation
+ * 
+ * This is the complement to startIrrigation().
+ */
+void stopIrrigation() {
+    // ═══════════════════════════════════════════════════════════════════
+    // GUARD: Prevent Multiple Stop Calls
+    // ═══════════════════════════════════════════════════════════════════
+    
+    if (!pumpStatus) return;  // Already stopped, exit early
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 1: Update Software State
+    // ═══════════════════════════════════════════════════════════════════
+    
+    pumpStatus = false;                   // Mark pump as stopped
+    lastIrrigationStop = systemSeconds;   // Record stop time for cooldown
+    currentPumpDuration = 0;              // Reset duration counter
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 2: Deactivate Hardware - Turn OFF Pump
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Direct register manipulation to turn off pump:
+     * PORTB &= ~(1<<PB2) clears bit PB2 to 0 (LOW)
+     * This de-energizes the relay, stopping the pump.
+     */
+    PORTB &= ~(1<<PB2);  // Set PB2 LOW - Pump OFF
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 3: Deactivate Hardware - Turn OFF Status LED
+    // ═══════════════════════════════════════════════════════════════════
+    
+    PORTB &= ~(1<<PB5);  // Set PB5 LOW - LED OFF
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 4: Deactivate Hardware - Close Servo Valve
+    // ═══════════════════════════════════════════════════════════════════
+    
+    waterValve.write(0);  // Close valve (0°)
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 5: Audio Feedback - Single Beep
+    // ═══════════════════════════════════════════════════════════════════
+    
+    PORTB |= (1<<PB0);   // Buzzer ON
+    delay(100);          // 100ms duration
+    PORTB &= ~(1<<PB0);  // Buzzer OFF
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 6: Log to Serial Monitor
+    // ═══════════════════════════════════════════════════════════════════
+    
+    Serial.println(">>> PUMP OFF <<<");
+    Serial.print("Water used. Tank: ");
+    Serial.print(waterLevel);
+    Serial.print("% | Next in: ");
+    Serial.print(cooldownPeriod);
+    Serial.println("s");
+}
+
+/*
+ * controlIrrigation() - Main Irrigation Decision Logic
+ * 
+ * This function is called every second to make irrigation decisions:
+ * 1. Check for emergency conditions (moisture too high)
+ * 2. If pump is running, check if it should stop
+ * 3. If pump is off, check if it should start
+ * 
+ * DECISION FLOW:
+ * 
+ * [Emergency Check]
+ *        ↓
+ * Moisture >= 80%? → YES → Stop pump immediately
+ *        ↓ NO
+ * [Pump Running Check]
+ *        ↓
+ * Pump ON? → YES → Check stop conditions (duration, low water)
+ *        ↓ NO
+ * [Cooldown Check]
+ *        ↓
+ * Cooldown complete? → NO → Wait
+ *        ↓ YES
+ * [Start Conditions]
+ *        ↓
+ * Moisture < Threshold AND Water > 10%? → YES → Start pump
+ *        ↓ NO
+ * Do nothing, wait for next check
+ */
+void controlIrrigation() {
+    // ═══════════════════════════════════════════════════════════════════
+    // EMERGENCY CHECK: Moisture Too High
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * If soil is saturated (>= 80%), stop all irrigation immediately.
+     * This prevents overwatering which can damage plants (root rot).
+     */
+    if (avgMoisture >= 80) {
+        if (pumpStatus) {
+            Serial.println("!!! EMERGENCY: Moisture too high !!!");
+            stopIrrigation();
+        }
+        return;  // Don't process further, wait for moisture to drop
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // PUMP RUNNING: Check Stop Conditions
+    // ═══════════════════════════════════════════════════════════════════
+    
+    if (pumpStatus) {
+        // Log current pump progress
+        Serial.print("Pumping... ");
+        Serial.print(currentPumpDuration);
+        Serial.print("/");
+        Serial.print(activePumpDuration);
+        Serial.println("s");
+        
+        // CONDITION 1: Duration reached
+        if (currentPumpDuration >= activePumpDuration) {
+            stopIrrigation();  // Normal completion
+        }
+        // CONDITION 2: Water tank too low
+        else if (waterLevel < 10) {
+            Serial.println("WARNING: Low water!");
+            stopIrrigation();  // Safety stop
+        }
+        return;  // Pump is running, don't check start conditions
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // COOLDOWN CHECK: Wait Period Between Cycles
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Cooldown prevents immediate re-irrigation after a cycle.
+     * This allows soil to absorb water and sensors to stabilize.
+     */
+    uint16_t timeSinceStop = systemSeconds - lastIrrigationStop;
+    bool cooldownDone = (timeSinceStop >= cooldownPeriod);
+    
+    if (!cooldownDone) {
+        return;  // Still in cooldown, wait
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // START CONDITIONS: Check If Irrigation Needed
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Start irrigation if:
+     * 1. Moisture is below threshold (soil is dry)
+     * 2. Water tank has sufficient water (>= 10%)
+     * 3. Cooldown period has elapsed (checked above)
+     */
+    if (avgMoisture < moistureThreshold && waterLevel >= 10) {
+        startIrrigation();
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 18: WATER LEVEL MANAGEMENT
+// ═══════════════════════════════════════════════════════════════════════════
+
+/*
+ * updateWaterLevel() - Simulate Water Tank Level Changes
+ * 
+ * This function simulates:
+ * 1. Water consumption when pump is running
+ * 2. Automatic tank refill when pump is off
+ * 
+ * WATER CONSUMPTION:
+ * When pump runs, it uses water from the tank.
+ * Rate: 2% per second (10% for a 5-second cycle)
+ * 
+ * AUTOMATIC REFILL:
+ * Simulates continuous water supply (rain, tap, reservoir)
+ * Rate: 2% every 3 seconds (slow refill)
+ * This ensures tank doesn't stay empty indefinitely.
+ * 
+ * In a real system, you would:
+ * - Use an ultrasonic sensor to measure actual water level
+ * - Or use a float switch to detect low/high levels
+ * - Control a solenoid valve to refill from water supply
+ */
+void updateWaterLevel() {
+    // Static variables persist between function calls
+    static uint16_t lastUpdate = 0;   // Track last pump usage update
+    static uint16_t lastRefill = 0;   // Track last auto-refill time
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // WATER CONSUMPTION: Pump Uses Water
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * When pump is ON, water flows from tank to soil.
+     * Decrease tank level by 2% per second.
+     * 
+     * Safety check: Ensure we don't go below 0% (underflow protection)
+     */
+    if (pumpStatus && systemSeconds != lastUpdate) {
+        if (waterLevel >= 2) {
+            waterLevel -= 2;  // Use 2% of tank per second
+        } else {
+            waterLevel = 0;   // Tank is empty
+        }
+        lastUpdate = systemSeconds;
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // AUTOMATIC REFILL: Tank Slowly Fills When Pump OFF
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Simulates rainwater collection or external water supply.
+     * When pump is OFF, tank gains 2% every 3 seconds.
+     * 
+     * Why 3 seconds? 
+     * - Slower than consumption rate to make tank management realistic
+     * - Fast enough to not run out permanently in simulation
+     * 
+     * In real system:
+     * - Could be controlled by float switch (auto-fills when low)
+     * - Or manual refill (operator adds water)
+     * - Or connected to main water supply with solenoid valve
+     */
+    if (!pumpStatus && systemSeconds - lastRefill >= 3) {
+        if (waterLevel < 100) {
+            waterLevel += 2;  // Add 2% to tank
+            if (waterLevel > 100) {
+                waterLevel = 100;  // Cap at 100%
+            }
+        }
+        lastRefill = systemSeconds;
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 19: ADAPTIVE CONTROL ALGORITHM
+// ═══════════════════════════════════════════════════════════════════════════
+
+/*
+ * adaptParameters() - Self-Tuning Control Algorithm
+ * 
+ * This is the "intelligence" of the system. It monitors performance and
+ * automatically adjusts control parameters to optimize irrigation.
+ * 
+ * ADAPTATION STRATEGIES:
+ * 
+ * 1. THRESHOLD ADJUSTMENT (moistureThreshold)
+ *    - If soil stays too dry → Lower threshold (irrigate sooner)
+ *    - If soil stays too wet → Raise threshold (irrigate later)
+ * 
+ * 2. PUMP DURATION ADJUSTMENT (pumpDuration)
+ *    - If changes are large → Increase duration (more water per cycle)
+ *    - If system is stable → Decrease duration (more efficient)
+ * 
+ * 3. PERFORMANCE TRACKING (performanceScore)
+ *    - Score increases when moisture is in optimal range
+ *    - Score decreases when moisture is too high or too low
+ *    - Provides long-term view of system health
+ * 
+ * WHY ADAPTIVE CONTROL?
+ * - Different plants have different water needs
+ * - Soil conditions change over time
+ * - Environmental factors (temperature, humidity) vary
+ * - One-size-fits-all approach is inefficient
+ * - System learns and optimizes automatically
+ */
+void adaptParameters() {
+    // ═══════════════════════════════════════════════════════════════════
+    // GUARD: Don't Adapt While Pump Is Running
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Changing parameters mid-cycle could cause erratic behavior.
+     * Wait until pump stops to evaluate and adjust.
+     */
+    if (pumpStatus) return;
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // RATE LIMIT: Only Adapt Every 10 Seconds
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Rapid adaptation can cause oscillation (parameters swing wildly).
+     * By limiting to every 10 seconds, we allow system to stabilize
+     * between adjustments and make more informed decisions.
+     */
+    static uint16_t lastAdapt = 0;
+    if (systemSeconds - lastAdapt < 10) return;  // Too soon, wait
+    lastAdapt = systemSeconds;
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STRATEGY 1: Adjust Threshold Based on Moisture Level
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Goal: Keep moisture close to target (65%)
+     * 
+     * If moisture is too HIGH (>75%):
+     * - We're overwatering
+     * - Increase threshold so pump starts later (when drier)
+     * - This reduces water usage
+     * 
+     * If moisture is too LOW (<55%):
+     * - We're underwatering
+     * - Decrease threshold so pump starts sooner (when less dry)
+     * - This increases water delivery
+     */
+    if (avgMoisture > moistureTarget + 10) {
+        // TOO WET: Reduce irrigation frequency
+        if (moistureThreshold < 55) {
+            moistureThreshold += 2;  // Higher threshold = less frequent watering
+            Serial.print("Threshold increased to ");
+            Serial.println(moistureThreshold);
+        }
+        // Also reduce pump duration (less water per cycle)
+        if (pumpDuration > 3) {
+            pumpDuration--;
+        }
+    }
+    else if (avgMoisture < moistureTarget - 10) {
+        // TOO DRY: Increase irrigation frequency
+        if (moistureThreshold > 30) {
+            moistureThreshold -= 2;  // Lower threshold = more frequent watering
+            Serial.print("Threshold decreased to ");
+            Serial.println(moistureThreshold);
+        }
+        // Also increase pump duration (more water per cycle)
+        if (pumpDuration < 10) {
+            pumpDuration++;
+        }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STRATEGY 2: Update Performance Score
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Performance score tracks long-term system effectiveness.
+     * - In optimal range (threshold to target+5): Score increases
+     * - Outside optimal range: Score decreases
+     * 
+     * This provides a metric for evaluating system health over time.
+     * A consistently low score indicates system needs attention.
+     */
+    if (avgMoisture >= moistureThreshold && avgMoisture <= moistureTarget + 5) {
+        // Moisture is in good range - reward
+        performanceScore = min(100, performanceScore + 1);
+    } else {
+        // Moisture is out of range - penalize
+        performanceScore = max(0, performanceScore - 1);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 20: LCD DISPLAY FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/*
+ * updateLCD() - Rotate Through Display Screens
+ * 
+ * The 16x2 LCD can only show 32 characters at once.
+ * We rotate through multiple screens to show all system information.
+ * 
+ * SCREEN LAYOUT:
+ * Screen 0: Moisture status and pump state
+ * Screen 1: Individual zones and environmental data
+ * Screen 2: Statistics (cycles, performance, uptime)
+ * 
+ * LCD CHARACTER POSITIONS:
+ * Row 0: Characters 0-15 (top row)
+ * Row 1: Characters 0-15 (bottom row)
+ * 
+ * Example:
+ * Position (0,0) = top-left
+ * Position (15,0) = top-right
+ * Position (0,1) = bottom-left
+ * Position (15,1) = bottom-right
+ */
+void updateLCD() {
+    lcd.clear();  // Clear all 32 characters
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // SCREEN 0: Main Status
+    // ═══════════════════════════════════════════════════════════════════
+    
+    if (lcdScreen == 0) {
+        /*
+         * Top row: Moisture and pump status
+         * Example: "Moist:45%   ON"
+         */
+        lcd.setCursor(0, 0);           // Start at top-left
+        lcd.print("Moist:");
+        lcd.print(avgMoisture);
+        lcd.print("% ");
+        lcd.print(pumpStatus ? "ON" : "OFF");
+        
+        /*
+         * Bottom row: Threshold and water level
+         * Example: "Thr:40% W:85%"
+         */
+        lcd.setCursor(0, 1);           // Start at bottom-left
+        lcd.print("Thr:");
+        lcd.print(moistureThreshold);
+        lcd.print("% W:");
+        lcd.print(waterLevel);
+        lcd.print("%");
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // SCREEN 1: Zone Details and Environment
+    // ═══════════════════════════════════════════════════════════════════
+    
+    else if (lcdScreen == 1) {
+        /*
+         * Top row: Individual zone moisture levels
+         * Example: "Z1:48% Z2:42%"
+         */
+        lcd.setCursor(0, 0);
+        lcd.print("Z1:");
+        lcd.print(moisture1);
+        lcd.print("% Z2:");
+        lcd.print(moisture2);
+        lcd.print("%");
+        
+        /*
+         * Bottom row: Temperature and light level
+         * Example: "T:25C L:75%"
+         */
+        lcd.setCursor(0, 1);
+        lcd.print("T:");
+        lcd.print(temperature);
+        lcd.print("C L:");
+        lcd.print(lightLevel);
+        lcd.print("%");
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // SCREEN 2: Statistics
+    // ═══════════════════════════════════════════════════════════════════
+    
+    else {
+        /*
+         * Top row: Total irrigation cycles
+         * Example: "Cycles:12"
+         */
+        lcd.setCursor(0, 0);
+        lcd.print("Cycles:");
+        lcd.print(irrigationCycles);
+        
+        /*
+         * Bottom row: Performance score and uptime
+         * Example: "Perf:95 Up:3600"
+         */
+        lcd.setCursor(0, 1);
+        lcd.print("Perf:");
+        lcd.print(performanceScore);
+        lcd.print(" Up:");
+        lcd.print(systemSeconds);
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // Advance to Next Screen (Cycles: 0 → 1 → 2 → 0 → ...)
+    // ═══════════════════════════════════════════════════════════════════
+    
+    lcdScreen = (lcdScreen + 1) % 3;  // Modulo 3 for 3 screens
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 21: JSON TELEMETRY OUTPUT
+// ═══════════════════════════════════════════════════════════════════════════
+
+/*
+ * sendJSON() - Output System Data in JSON Format
+ * 
+ * JSON (JavaScript Object Notation) is a standard data format.
+ * This allows external systems (Python scripts, web dashboards, databases)
+ * to easily parse and use the irrigation data.
+ * 
+ * JSON FORMAT:
+ * {"key1":value1,"key2":"string_value","key3":numeric_value}
+ * 
+ * Example output:
+ * {"moist":45,"temp":25,"light":75,"pump":"ON","servo":90,...}
+ * 
+ * FIELDS INCLUDED:
+ * - moist: Average soil moisture percentage
+ * - temp: Temperature in Celsius
+ * - light: Light level percentage
+ * - pump: Pump status ("ON" or "OFF")
+ * - servo: Servo position (0 or 90 degrees)
+ * - led: LED status ("ON" or "OFF")
+ * - water: Water tank level percentage
+ * - thr: Current moisture threshold
+ * - target: Target moisture level
+ * - cycles: Total irrigation cycles completed
+ * - pumpTime: Current pump duration (if running)
+ * - pumpDur: Configured pump duration
+ * - cooldown: Seconds remaining until next irrigation allowed
+ * - perf: Performance score
+ */
+void sendJSON() {
+    // ═══════════════════════════════════════════════════════════════════
+    // Calculate Cooldown Remaining Time
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * cooldownLeft shows how many seconds until irrigation can start again.
+     * This helps external systems predict next irrigation time.
+     */
+    uint16_t cooldownLeft = 0;
+    if (!pumpStatus) {  // Only calculate if pump is off
+        uint16_t elapsed = systemSeconds - lastIrrigationStop;
+        if (elapsed < cooldownPeriod) {
+            cooldownLeft = cooldownPeriod - elapsed;
+        }
+        // If elapsed >= cooldownPeriod, cooldownLeft stays 0 (ready to irrigate)
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // Build JSON String and Send Over Serial
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Note: Serial.print() builds the string incrementally.
+     * Each print() call adds to the output buffer.
+     * println() at the end adds newline and flushes buffer.
+     * 
+     * Format: Key-value pairs separated by commas, enclosed in braces.
+     * Strings are enclosed in quotes, numbers are not.
+     */
+    Serial.print("{\"moist\":");
+    Serial.print(avgMoisture);
+    Serial.print(",\"temp\":");
+    Serial.print(temperature);
+    Serial.print(",\"light\":");
+    Serial.print(lightLevel);
+    Serial.print(",\"pump\":\"");
+    Serial.print(pumpStatus ? "ON" : "OFF");
+    Serial.print("\",\"servo\":");
+    Serial.print(pumpStatus ? 90 : 0);
+    Serial.print(",\"led\":\"");
+    Serial.print(pumpStatus ? "ON" : "OFF");
+    Serial.print("\",\"water\":");
+    Serial.print(waterLevel);
+    Serial.print(",\"thr\":");
+    Serial.print(moistureThreshold);
+    Serial.print(",\"target\":");
+    Serial.print(moistureTarget);
+    Serial.print(",\"cycles\":");
+    Serial.print(irrigationCycles);
+    Serial.print(",\"pumpTime\":");
+    Serial.print(currentPumpDuration);
+    Serial.print(",\"pumpDur\":");
+    Serial.print(pumpDuration);
+    Serial.print(",\"cooldown\":");
+    Serial.print(cooldownLeft);
+    Serial.print(",\"perf\":");
+    Serial.print(performanceScore);
+    Serial.println("}");  // End JSON and send newline
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 22: ISR FLAG HANDLER
+// ═══════════════════════════════════════════════════════════════════════════
+
+/*
+ * handleISRFlags() - Process Interrupt Flags in Main Loop
+ * 
+ * WHY THIS PATTERN?
+ * ISRs (Interrupt Service Routines) should be fast and short.
+ * Complex operations (LCD updates, serial printing, control logic)
+ * should NOT be done inside ISRs because:
+ * 1. They block other interrupts
+ * 2. They can cause timing issues
+ * 3. They risk stack overflow
+ * 
+ * SOLUTION:
+ * ISR just sets a flag and exits quickly (1-5 CPU cycles).
+ * Main loop checks flags and does the actual work.
+ * This is called "deferred interrupt processing."
+ * 
+ * PROCESSING ORDER:
+ * We check flags in priority order (though in this simple system,
+ * the order doesn't matter much since we process all flags each loop).
+ */
+void handleISRFlags() {
+    // ═══════════════════════════════════════════════════════════════════
+    // Process ADC Update Flag (Set ~61 times per second)
+    // ═══════════════════════════════════════════════════════════════════
+    
+    if (isrFlags & FLAG_ADC_UPDATE) {
+        isrFlags &= ~FLAG_ADC_UPDATE;  // Clear the flag
+        updateSensors();                // Read all sensor values
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // Process 1-Second Timer Flag (Set once per second)
+    // ═══════════════════════════════════════════════════════════════════
+    
+    if (isrFlags & FLAG_ONE_SECOND) {
+        isrFlags &= ~FLAG_ONE_SECOND;  // Clear the flag
+        
+        // ═══════════════════════════════════════════════════════════════
+        // Every Second: Core System Updates
+        // ═══════════════════════════════════════════════════════════════
+        
+        updateWaterLevel();     // Update tank level (usage & refill)
+        controlIrrigation();    // Check if pump should start/stop
+        adaptParameters();      // Self-tuning control adjustments
+        
+        // ═══════════════════════════════════════════════════════════════
+        // Every 3 Seconds: LCD Display Update
+        // ═══════════════════════════════════════════════════════════════
+        
+        /*
+         * LCD updates every 3 seconds to:
+         * - Reduce flickering (frequent clears look bad)
+         * - Give user time to read information
+         * - Reduce CPU overhead
+         */
+        if (lcdUpdateCounter >= 3) {
+            updateLCD();
+            lcdUpdateCounter = 0;  // Reset counter
+        }
+        
+        // ═══════════════════════════════════════════════════════════════
+        // Every Second: JSON Telemetry Output
+        // ═══════════════════════════════════════════════════════════════
+        
+        /*
+         * Send JSON data every second for real-time monitoring.
+         * External systems can plot graphs, log data, trigger alerts, etc.
+         */
+        sendJSON();
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 23: SETUP - SYSTEM INITIALIZATION
+// ═══════════════════════════════════════════════════════════════════════════
+
+/*
+ * setup() - Arduino Setup Function (Runs Once at Startup)
+ * 
+ * This function initializes all hardware peripherals and software state.
+ * It runs once when:
+ * - Power is first applied
+ * - Reset button is pressed
+ * - After programming completes
+ * 
+ * INITIALIZATION ORDER:
+ * 1. Disable interrupts (critical sections coming)
+ * 2. Initialize Serial communication
+ * 3. Initialize I/O ports (pin directions)
+ * 4. Initialize ADC (analog reading)
+ * 5. Initialize Timer2 (timing base)
+ * 6. Initialize LCD display
+ * 7. Initialize Servo motor
+ * 8. Initialize Watchdog timer (must be last)
+ * 9. Enable interrupts (system now active)
+ * 10. Display startup message
+ */
+void setup() {
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 1: Disable Interrupts During Setup
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * cli() - Clear Interrupt Flag (disable all interrupts)
+     * We disable interrupts to ensure atomic configuration of hardware.
+     * No interrupt can fire during setup, preventing race conditions.
+     */
+    cli();  // Global interrupt disable
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 2: Initialize Serial Communication
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * 9600 baud is standard for Arduino serial communication.
+     * This allows monitoring and debugging via Serial Monitor.
+     * 
+     * Baud rate = bits per second
+     * 9600 baud ≈ 960 characters per second (each char = ~10 bits)
+     */
+    Serial.begin(9600);
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 3: Initialize Hardware Peripherals
+    // ═══════════════════════════════════════════════════════════════════
+    
+    initPorts();   // Configure I/O pin directions
+    initADC();     // Configure analog-to-digital converter
+    initTimer2();  // Configure Timer2 for timing (61 Hz)
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 4: Initialize LCD Display
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * lcd.begin(columns, rows) initializes the LCD
+     * 16x2 = 16 characters wide, 2 rows tall
+     * This also sets the LCD pins as outputs
+     */
+    lcd.begin(16, 2);
+    lcd.print("Smart Irrigation");
+    lcd.setCursor(0, 1);
+    lcd.print("Starting...");
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 5: Initialize Servo Motor
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * attach(pin) connects the servo to the specified pin
+     * The Servo library will automatically generate PWM on this pin
+     * Initial position is 0° (valve closed)
+     */
+    waterValve.attach(SERVO_PIN);  // Connect to pin 9
+    waterValve.write(0);           // Close valve initially
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 6: Initialize Timing Variables
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Set lastIrrigationStop to 0 so that the initial cooldown
+     * (systemSeconds - 0 >= cooldownPeriod) will evaluate correctly.
+     */
+    lastIrrigationStop = 0;
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 7: Initialize Watchdog Timer (MUST BE LAST!)
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Watchdog initialization includes sei() which enables interrupts.
+     * After this point, Timer2 ISR will start firing.
+     * This is why watchdog init must be the last initialization step.
+     */
+    initWatchdog();  // Also re-enables interrupts via sei()
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 8: Enable Global Interrupts
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * sei() - Set Interrupt Flag (enable all interrupts)
+     * After this, the system responds to hardware interrupts.
+     * Note: initWatchdog() already calls sei(), but we call it again
+     * to be explicit about system state.
+     */
+    sei();  // Global interrupt enable
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 9: Startup Beep (User Feedback)
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * Single beep indicates successful system startup.
+     * Audio feedback is useful when LCD might not be visible.
+     */
+    PORTB |= (1<<PB0);   // Buzzer ON
+    delay(200);          // 200ms beep
+    PORTB &= ~(1<<PB0);  // Buzzer OFF
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 10: Wait for User to Read Startup Message
+    // ═══════════════════════════════════════════════════════════════════
+    
+    delay(2000);  // Show "Starting..." for 2 seconds
+    lcd.clear();  // Clear for normal operation
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 11: Print Startup Information to Serial Monitor
+    // ═══════════════════════════════════════════════════════════════════
+    
+    Serial.println("=== SMART IRRIGATION ===");
+    Serial.println("Threshold: 40%");
+    Serial.println("Target: 65%");
+    Serial.println("Pump Duration: 5s");
+    Serial.println("Cooldown: 10s");
+    Serial.println("Auto-Refill: ON (+2% every 3s)");
+    Serial.println("========================");
+    Serial.println("Ready!");
+    Serial.println();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 24: MAIN LOOP - CONTINUOUS EXECUTION
+// ═══════════════════════════════════════════════════════════════════════════
+
+/*
+ * loop() - Arduino Main Loop (Runs Continuously)
+ * 
+ * After setup() completes, loop() runs repeatedly forever.
+ * This is the heart of the program, where all processing happens.
+ * 
+ * ARCHITECTURE: Flag-Based Processing
+ * 
+ * Instead of doing time-sensitive operations directly in loop(),
+ * we check flags set by ISRs and process them accordingly.
+ * This allows precise timing without busy-waiting.
+ * 
+ * EXECUTION FLOW:
+ * 1. Check and process ISR flags
+ * 2. Small delay to prevent CPU hogging
+ * 3. Repeat forever
+ * 
+ * WHY delay(10)?
+ * - Prevents busy-waiting (constantly checking flags)
+ * - Reduces power consumption
+ * - Allows other system tasks to execute
+ * - 10ms is short enough to be responsive but long enough to save power
+ */
+void loop() {
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 1: Process Interrupt Flags
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+         * This function checks all ISR flags and performs the corresponding
+     * actions. This is the core of our deferred interrupt processing.
+     * 
+     * Operations include:
+     * - Sensor reading (FLAG_ADC_UPDATE)
+     * - Water level management
+     * - Irrigation control logic
+     * - Adaptive parameter tuning
+     * - LCD display updates
+     * - JSON telemetry transmission
+     */
+    handleISRFlags();
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 2: Small Delay to Prevent Busy-Waiting
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /*
+     * A 10ms delay serves multiple purposes:
+     * 
+     * 1. POWER EFFICIENCY: Constant polling wastes CPU cycles and power.
+     *    The delay allows the CPU to idle momentarily.
+     * 
+     * 2. SYSTEM STABILITY: Prevents loop from running too fast, which
+     *    could cause issues with shared variables or timing.
+     * 
+     * 3. RESPONSIVE ENOUGH: 10ms is fast enough for real-time control.
+     *    Human reaction time is ~200ms, so 10ms is imperceptible.
+     * 
+     * 4. WATCHDOG SAFE: Loop runs ~100 times/second, well within the
+     *    2-second watchdog timeout window.
+     * 
+     * In low-power applications, you might use sleep modes here instead
+     * of delay(), waking only on interrupts to save battery.
+     */
+    delay(10);  // 10 millisecond delay between loop iterations
+}
+
+/*
+ * ═══════════════════════════════════════════════════════════════════════════
+ * END OF SMART IRRIGATION SYSTEM CODE
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * SUMMARY OF EMBEDDED SYSTEM FEATURES IMPLEMENTED:
+ * 
+ * ✓ DIRECT REGISTER MANIPULATION
+ *   - DDRB, DDRC, DDRD for pin direction control
+ *   - PORTB, PORTC, PORTD for output control
+ *   - PINB, PINC, PIND for input reading
+ *   - Much faster than Arduino digitalRead/digitalWrite functions
+ * 
+ * ✓ HARDWARE TIMER INTERRUPTS
+ *   - Timer2 configured for ~61 Hz overflow rate
+ *   - Creates 1-second time base by counting 61 overflows
+ *   - Provides accurate timing without CPU polling
+ * 
+ * ✓ WATCHDOG TIMER
+ *   - 2-second timeout for crash recovery
+ *   - Reset every 1 second to prevent timeout
+ *   - Automatic safe-state entry if system hangs
+ *   - Interrupt mode (not reset mode) for graceful recovery
+ * 
+ * ✓ ANALOG-TO-DIGITAL CONVERTER (ADC)
+ *   - 10-bit resolution (0-1023)
+ *   - 125kHz ADC clock (16MHz / 128 prescaler)
+ *   - Four channels: moisture ×2, temperature, light
+ *   - AVCC (5V) reference voltage
+ * 
+ * ✓ INTERRUPT SERVICE ROUTINES (ISRs)
+ *   - Timer2 overflow ISR for timing
+ *   - Watchdog timeout ISR for recovery
+ *   - Flag-based deferred processing pattern
+ *   - Minimal ISR execution time for system responsiveness
+ * 
+ * ✓ ADAPTIVE CONTROL ALGORITHM
+ *   - Self-tuning threshold adjustment
+ *   - Pump duration optimization
+ *   - Performance score tracking
+ *   - Day/night adaptation based on light
+ *   - Rate-limited parameter changes (every 10s)
+ * 
+ * ✓ REAL-TIME MONITORING
+ *   - JSON telemetry output for external systems
+ *   - LCD display with rotating information screens
+ *   - Serial debugging messages
+ *   - Performance and stability metrics
+ * 
+ * ✓ SAFETY FEATURES
+ *   - Emergency stop at 80% moisture
+ *   - Low water tank protection (stops at 10%)
+ *   - Cooldown period between irrigation cycles
+ *   - Watchdog recovery from system hangs
+ *   - Constrained parameter ranges (no extreme values)
+ * 
+ * ✓ RESOURCE MANAGEMENT
+ *   - Water consumption tracking
+ *   - Automatic tank refill simulation
+ *   - Efficient memory usage (minimal RAM footprint)
+ *   - Non-blocking operations (no long delays in critical sections)
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * REGISTERS USED IN THIS PROJECT:
+ * 
+ * I/O PORT REGISTERS:
+ * - DDRB, DDRC, DDRD: Data Direction (input/output configuration)
+ * - PORTB, PORTC, PORTD: Output data / Pull-up control
+ * - PINB, PINC, PIND: Input reading
+ * 
+ * TIMER REGISTERS:
+ * - TCCR2A, TCCR2B: Timer2 control (mode, prescaler)
+ * - TIMSK2: Timer2 interrupt mask (enable overflow interrupt)
+ * - TCNT2: Timer2 counter value (auto-incremented by hardware)
+ * 
+ * ADC REGISTERS:
+ * - ADMUX: ADC multiplexer selection (channel, reference)
+ * - ADCSRA: ADC control (enable, start, prescaler)
+ * - ADC/ADCL/ADCH: ADC result (10-bit value)
+ * 
+ * WATCHDOG REGISTERS:
+ * - WDTCSR: Watchdog timer control (timeout, mode)
+ * 
+ * INTERRUPT CONTROL:
+ * - SREG bit 7 (I-flag): Global interrupt enable/disable
+ * - sei() sets I-flag, cli() clears I-flag
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════

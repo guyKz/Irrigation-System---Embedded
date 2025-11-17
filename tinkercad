@@ -1,0 +1,438 @@
+#include <avr/io.h>
+#include <avr/interrupt.h>
+#include <avr/wdt.h>
+#include <LiquidCrystal.h>
+#include <Servo.h>
+
+#define MOISTURE_1_CH 0
+#define MOISTURE_2_CH 1
+#define TEMP_SENSOR_CH 2
+#define LIGHT_SENSOR_CH 3
+
+#define SERVO_PIN 9
+
+LiquidCrystal lcd(7, 6, 5, 4, 3, 2);
+Servo waterValve;
+
+volatile uint16_t moisture1 = 0;
+volatile uint16_t moisture2 = 0;
+volatile uint16_t avgMoisture = 50;
+volatile int16_t temperature = 25;
+volatile uint16_t lightLevel = 50;
+volatile uint8_t waterLevel = 100;
+volatile bool pumpStatus = false;
+volatile uint16_t irrigationCycles = 0;
+
+uint8_t moistureThreshold = 40;
+uint8_t moistureTarget = 65;
+uint8_t pumpDuration = 5;
+uint8_t cooldownPeriod = 10;
+
+volatile uint16_t systemSeconds = 0;
+volatile uint16_t lastIrrigationStop = 0;
+volatile uint8_t currentPumpDuration = 0;
+volatile uint8_t activePumpDuration = 5;
+
+volatile uint8_t isrFlags = 0;
+#define FLAG_ONE_SECOND     (1<<0)
+#define FLAG_ADC_UPDATE     (1<<1)
+
+volatile uint8_t timer2OverflowCount = 0;
+
+uint8_t performanceScore = 100;
+bool isDaytime = true;
+
+volatile uint8_t lcdScreen = 0;
+volatile uint16_t lcdUpdateCounter = 0;
+volatile uint16_t wdtResetCounter = 0;
+
+void initPorts() {
+    DDRB |= (1<<DDB0);
+    DDRB |= (1<<DDB2);
+    DDRB |= (1<<DDB5);
+    
+    PORTB &= ~(1<<PB0);
+    PORTB &= ~(1<<PB2);
+    PORTB &= ~(1<<PB5);
+}
+
+void initADC() {
+    ADMUX = (1<<REFS0);
+    ADCSRA = (1<<ADEN) | (1<<ADPS2) | (1<<ADPS1) | (1<<ADPS0);
+}
+
+void initTimer2() {
+    TCCR2A = 0x00;
+    TCCR2B = (1<<CS22) | (1<<CS21) | (1<<CS20);
+    TIMSK2 = (1<<TOIE2);
+}
+
+void initWatchdog() {
+    cli();
+    wdt_reset();
+    WDTCSR |= (1<<WDCE) | (1<<WDE);
+    WDTCSR = (1<<WDIE) | (1<<WDP2) | (1<<WDP1) | (1<<WDP0);
+    sei();
+}
+
+ISR(TIMER2_OVF_vect) {
+    isrFlags |= FLAG_ADC_UPDATE;
+    
+    timer2OverflowCount++;
+    
+    if (timer2OverflowCount >= 61) {
+        timer2OverflowCount = 0;
+        isrFlags |= FLAG_ONE_SECOND;
+        systemSeconds++;
+        lcdUpdateCounter++;
+        wdtResetCounter++;
+        
+        if (pumpStatus) {
+            currentPumpDuration++;
+        }
+        
+        if (wdtResetCounter >= 1) {
+            wdt_reset();
+            wdtResetCounter = 0;
+        }
+    }
+}
+
+ISR(WDT_vect) {
+    pumpStatus = false;
+    PORTB &= ~(1<<PB2);
+    wdt_reset();
+}
+
+uint16_t readADC(uint8_t channel) {
+    ADMUX = (ADMUX & 0xF0) | (channel & 0x0F);
+    ADCSRA |= (1<<ADSC);
+    while (ADCSRA & (1<<ADSC));
+    return ADC;
+}
+
+void updateSensors() {
+    uint16_t raw1 = readADC(MOISTURE_1_CH);
+    uint16_t raw2 = readADC(MOISTURE_2_CH);
+    uint16_t rawTemp = readADC(TEMP_SENSOR_CH);
+    uint16_t rawLight = readADC(LIGHT_SENSOR_CH);
+    
+    moisture1 = map(raw1, 0, 1023, 100, 0);
+    moisture2 = map(raw2, 0, 1023, 100, 0);
+    avgMoisture = (moisture1 + moisture2) / 2;
+    
+    moisture1 = constrain(moisture1, 0, 100);
+    moisture2 = constrain(moisture2, 0, 100);
+    avgMoisture = constrain(avgMoisture, 0, 100);
+    
+    int32_t voltage_mV = ((int32_t)rawTemp * 5000) / 1023;
+    temperature = (voltage_mV - 500) / 10;
+    temperature = constrain(temperature, -40, 125);
+    
+    lightLevel = map(rawLight, 0, 1023, 0, 100);
+    lightLevel = constrain(lightLevel, 0, 100);
+    
+    isDaytime = (lightLevel > 50);
+}
+
+void startIrrigation() {
+    if (pumpStatus) return;
+    
+    pumpStatus = true;
+    currentPumpDuration = 0;
+    activePumpDuration = pumpDuration;
+    
+    PORTB |= (1<<PB2);
+    PORTB |= (1<<PB5);
+    waterValve.write(90);
+    
+    PORTB |= (1<<PB0);
+    delay(100);
+    PORTB &= ~(1<<PB0);
+    
+    irrigationCycles++;
+    
+    Serial.println(">>> PUMP ON <<<");
+    Serial.print("Duration: ");
+    Serial.print(activePumpDuration);
+    Serial.print("s | Moisture: ");
+    Serial.print(avgMoisture);
+    Serial.print("% | Threshold: ");
+    Serial.print(moistureThreshold);
+    Serial.println("%");
+}
+
+void stopIrrigation() {
+    if (!pumpStatus) return;
+    
+    pumpStatus = false;
+    lastIrrigationStop = systemSeconds;
+    currentPumpDuration = 0;
+    
+    PORTB &= ~(1<<PB2);
+    PORTB &= ~(1<<PB5);
+    waterValve.write(0);
+    
+    PORTB |= (1<<PB0);
+    delay(100);
+    PORTB &= ~(1<<PB0);
+    
+    Serial.println(">>> PUMP OFF <<<");
+    Serial.print("Water used. Tank: ");
+    Serial.print(waterLevel);
+    Serial.print("% | Next in: ");
+    Serial.print(cooldownPeriod);
+    Serial.println("s");
+}
+
+void controlIrrigation() {
+    if (avgMoisture >= 80) {
+        if (pumpStatus) {
+            Serial.println("!!! EMERGENCY: Moisture too high !!!");
+            stopIrrigation();
+        }
+        return;
+    }
+    
+    if (pumpStatus) {
+        Serial.print("Pumping... ");
+        Serial.print(currentPumpDuration);
+        Serial.print("/");
+        Serial.print(activePumpDuration);
+        Serial.println("s");
+        
+        if (currentPumpDuration >= activePumpDuration) {
+            stopIrrigation();
+        }
+        else if (waterLevel < 10) {
+            Serial.println("WARNING: Low water!");
+            stopIrrigation();
+        }
+        return;
+    }
+    
+    uint16_t timeSinceStop = systemSeconds - lastIrrigationStop;
+    bool cooldownDone = (timeSinceStop >= cooldownPeriod);
+    
+    if (!cooldownDone) {
+        return;
+    }
+    
+    if (avgMoisture < moistureThreshold && waterLevel >= 10) {
+        startIrrigation();
+    }
+}
+
+void updateWaterLevel() {
+    static uint16_t lastUpdate = 0;
+    static uint16_t lastRefill = 0;
+    
+    if (pumpStatus && systemSeconds != lastUpdate) {
+        if (waterLevel >= 2) {
+            waterLevel -= 2;
+        } else {
+            waterLevel = 0;
+        }
+        lastUpdate = systemSeconds;
+    }
+    
+    if (!pumpStatus && systemSeconds - lastRefill >= 3) {
+        if (waterLevel < 100) {
+            waterLevel += 2;
+            if (waterLevel > 100) {
+                waterLevel = 100;
+            }
+        }
+        lastRefill = systemSeconds;
+    }
+}
+
+void adaptParameters() {
+    if (pumpStatus) return;
+    
+    static uint16_t lastAdapt = 0;
+    if (systemSeconds - lastAdapt < 10) return;
+    lastAdapt = systemSeconds;
+    
+    if (avgMoisture > moistureTarget + 10) {
+        if (moistureThreshold < 55) {
+            moistureThreshold += 2;
+            Serial.print("Threshold increased to ");
+            Serial.println(moistureThreshold);
+        }
+        if (pumpDuration > 3) {
+            pumpDuration--;
+        }
+    }
+    else if (avgMoisture < moistureTarget - 10) {
+        if (moistureThreshold > 30) {
+            moistureThreshold -= 2;
+            Serial.print("Threshold decreased to ");
+            Serial.println(moistureThreshold);
+        }
+        if (pumpDuration < 10) {
+            pumpDuration++;
+        }
+    }
+    
+    if (avgMoisture >= moistureThreshold && avgMoisture <= moistureTarget + 5) {
+        performanceScore = min(100, performanceScore + 1);
+    } else {
+        performanceScore = max(0, performanceScore - 1);
+    }
+}
+
+void updateLCD() {
+    lcd.clear();
+    
+    if (lcdScreen == 0) {
+        lcd.setCursor(0, 0);
+        lcd.print("Moist:");
+        lcd.print(avgMoisture);
+        lcd.print("% ");
+        lcd.print(pumpStatus ? "ON" : "OFF");
+        
+        lcd.setCursor(0, 1);
+        lcd.print("Thr:");
+        lcd.print(moistureThreshold);
+        lcd.print("% W:");
+        lcd.print(waterLevel);
+        lcd.print("%");
+    }
+    else if (lcdScreen == 1) {
+        lcd.setCursor(0, 0);
+        lcd.print("Z1:");
+        lcd.print(moisture1);
+        lcd.print("% Z2:");
+        lcd.print(moisture2);
+        lcd.print("%");
+        
+        lcd.setCursor(0, 1);
+        lcd.print("T:");
+        lcd.print(temperature);
+        lcd.print("C L:");
+        lcd.print(lightLevel);
+        lcd.print("%");
+    }
+    else {
+        lcd.setCursor(0, 0);
+        lcd.print("Cycles:");
+        lcd.print(irrigationCycles);
+        
+        lcd.setCursor(0, 1);
+        lcd.print("Perf:");
+        lcd.print(performanceScore);
+        lcd.print(" Up:");
+        lcd.print(systemSeconds);
+    }
+    
+    lcdScreen = (lcdScreen + 1) % 3;
+}
+
+void sendJSON() {
+    uint16_t cooldownLeft = 0;
+    if (!pumpStatus) {
+        uint16_t elapsed = systemSeconds - lastIrrigationStop;
+        if (elapsed < cooldownPeriod) {
+            cooldownLeft = cooldownPeriod - elapsed;
+        }
+    }
+    
+    Serial.print("{\"moist\":");
+    Serial.print(avgMoisture);
+    Serial.print(",\"temp\":");
+    Serial.print(temperature);
+    Serial.print(",\"light\":");
+    Serial.print(lightLevel);
+    Serial.print(",\"pump\":\"");
+    Serial.print(pumpStatus ? "ON" : "OFF");
+    Serial.print("\",\"servo\":");
+    Serial.print(pumpStatus ? 90 : 0);
+    Serial.print(",\"led\":\"");
+    Serial.print(pumpStatus ? "ON" : "OFF");
+    Serial.print("\",\"water\":");
+    Serial.print(waterLevel);
+    Serial.print(",\"thr\":");
+    Serial.print(moistureThreshold);
+    Serial.print(",\"target\":");
+    Serial.print(moistureTarget);
+    Serial.print(",\"cycles\":");
+    Serial.print(irrigationCycles);
+    Serial.print(",\"pumpTime\":");
+    Serial.print(currentPumpDuration);
+    Serial.print(",\"pumpDur\":");
+    Serial.print(pumpDuration);
+    Serial.print(",\"cooldown\":");
+    Serial.print(cooldownLeft);
+    Serial.print(",\"perf\":");
+    Serial.print(performanceScore);
+    Serial.println("}");
+}
+
+void handleISRFlags() {
+    if (isrFlags & FLAG_ADC_UPDATE) {
+        isrFlags &= ~FLAG_ADC_UPDATE;
+        updateSensors();
+    }
+    
+    if (isrFlags & FLAG_ONE_SECOND) {
+        isrFlags &= ~FLAG_ONE_SECOND;
+        
+        updateWaterLevel();
+        controlIrrigation();
+        adaptParameters();
+        
+        if (lcdUpdateCounter >= 3) {
+            updateLCD();
+            lcdUpdateCounter = 0;
+        }
+        
+        sendJSON();
+    }
+}
+
+void setup() {
+    cli();
+    
+    Serial.begin(9600);
+    
+    initPorts();
+    initADC();
+    initTimer2();
+    
+    lcd.begin(16, 2);
+    lcd.print("Smart Irrigation");
+    lcd.setCursor(0, 1);
+    lcd.print("Starting...");
+    
+    waterValve.attach(SERVO_PIN);
+    waterValve.write(0);
+    
+    lastIrrigationStop = 0;
+    
+    initWatchdog();
+    
+    sei();
+    
+    PORTB |= (1<<PB0);
+    delay(200);
+    PORTB &= ~(1<<PB0);
+    
+    delay(2000);
+    lcd.clear();
+    
+    Serial.println("=== SMART IRRIGATION ===");
+    Serial.println("Threshold: 40%");
+    Serial.println("Target: 65%");
+    Serial.println("Pump Duration: 5s");
+    Serial.println("Cooldown: 10s");
+    Serial.println("Auto-Refill: ON (+2% every 3s)");
+    Serial.println("========================");
+    Serial.println("Ready!");
+    Serial.println();
+}
+
+void loop() {
+    handleISRFlags();
+    delay(10);
+}

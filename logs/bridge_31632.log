@@ -1,0 +1,114 @@
+2025-11-01 13:06:05 [INFO] __main__: ============================================================
+2025-11-01 13:06:05 [INFO] __main__: SMART IRRIGATION SYSTEM - TINKERCAD TO THINGSBOARD BRIDGE
+2025-11-01 13:06:05 [INFO] __main__: ============================================================
+2025-11-01 13:06:05 [INFO] __main__: Started at: 2025-11-01 13:06:05
+2025-11-01 13:06:05 [INFO] __main__: Log file: C:\Users\krzor\Desktop\irrigation last bridge\logs\bridge_31632.log
+2025-11-01 13:06:05 [INFO] __main__: ============================================================
+2025-11-01 13:06:05 [INFO] __main__: Starting Smart Irrigation Bridge...
+2025-11-01 13:06:05 [INFO] __main__: Initializing components...
+2025-11-01 13:06:05 [INFO] thingsboard_client: ThingsBoard client initialized: https://eu.thingsboard.cloud
+2025-11-01 13:06:05 [INFO] thingsboard_client: Telemetry endpoint: https://eu.thingsboard.cloud/api/v1/9CHMtFJbaOCWB7p96XmC/telemetry
+2025-11-01 13:06:05 [INFO] data_processor: Data processor initialized
+2025-11-01 13:06:05 [INFO] thingsboard_client: Testing ThingsBoard connection...
+2025-11-01 13:06:05 [INFO] thingsboard_client: ✓ ThingsBoard connection successful
+2025-11-01 13:06:05 [INFO] __main__: Starting browser automation...
+2025-11-01 13:06:06 [INFO] browser_automation: TinkerCAD automation initialized
+2025-11-01 13:06:06 [INFO] browser_automation: Navigating to TinkerCAD...
+2025-11-01 13:06:06 [INFO] browser_automation: Circuit URL: https://www.tinkercad.com/things/hTrSolRa4D1-smooth-jaiks-borwo/editel?returnTo=https%3A%2F%2Fwww.tinkercad.com%2Fdashboard%2Fdesigns%2Fcircuits&sharecode=WyCaIdMpHj_ctZyKmGF_-gRhH7uQz4xmHD_nGaFIFyM
+2025-11-01 13:06:09 [INFO] browser_automation: Attempting login...
+2025-11-01 13:06:16 [INFO] browser_automation: Waiting for login to complete...
+2025-11-01 13:06:21 [INFO] browser_automation: Navigating to circuit after login...
+2025-11-01 13:06:25 [INFO] browser_automation: ✓ Login successful and navigated to circuit
+2025-11-01 13:06:25 [INFO] browser_automation: Setting up simulation environment...
+2025-11-01 13:06:31 [INFO] browser_automation: ✓ Simulation setup complete
+2025-11-01 13:06:31 [INFO] __main__: Opening ThingsBoard dashboard...
+2025-11-01 13:06:32 [INFO] __main__: ✓ Dashboard opened: https://eu.thingsboard.cloud/dashboards/all/6e1fdde0-a387-11f0-89a6-d5955492b887
+2025-11-01 13:06:32 [INFO] browser_automation: Serial monitor initialized
+2025-11-01 13:06:32 [INFO] __main__: ============================================================
+2025-11-01 13:06:32 [INFO] __main__: BRIDGE ACTIVE - Monitoring serial output...
+2025-11-01 13:06:32 [INFO] __main__: Press Ctrl+C to stop
+2025-11-01 13:06:32 [INFO] __main__: ============================================================
+2025-11-01 13:06:51 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:06:55 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:07:00 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:07:04 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:07:08 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:07:16 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:07:20 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:07:29 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:07:33 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:07:39 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:07:44 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:07:48 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:07:58 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:08:09 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:08:19 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:08:23 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:08:27 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:08:32 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:08:38 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:08:44 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:08:48 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:08:52 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:08:57 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:09:03 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:09:06 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:09:09 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:09:12 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:09:15 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:09:26 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:09:32 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:09:36 [INFO] browser_automation: Simulation reset detected
+2025-11-01 13:09:42 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+Call log:
+  - waiting for locator(".code_panel__serial__content__text")
+
+2025-11-01 13:09:43 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:43 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:43 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:44 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:44 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:44 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:44 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:45 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:45 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:45 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:46 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:46 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:46 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:47 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:47 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:47 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:47 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:48 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:48 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:48 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:49 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:49 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:49 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:50 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:50 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:50 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:50 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:51 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:51 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:51 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:52 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:52 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:52 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-01 13:09:53 [INFO] __main__: 
+============================================================
+2025-11-01 13:09:53 [INFO] __main__: Stopping bridge (Ctrl+C detected)
+2025-11-01 13:09:53 [INFO] __main__: ============================================================
+2025-11-01 13:09:53 [INFO] __main__: 
+Runtime: 200.3 seconds
+2025-11-01 13:09:53 [INFO] __main__: Messages sent: 219
+2025-11-01 13:09:53 [INFO] __main__: Average rate: 1.09 msg/s
+2025-11-01 13:09:53 [INFO] __main__: Cleaning up...
+2025-11-01 13:09:53 [INFO] browser_automation: Stopping simulation...
+2025-11-01 13:09:53 [WARNING] browser_automation: Error stopping simulation: Locator.click: Target page, context or browser has been closed
+2025-11-01 13:09:53 [INFO] __main__: ✓ Browser closed
+2025-11-01 13:09:53 [INFO] __main__: Bridge stopped successfully
+2025-11-01 13:09:53 [INFO] __main__: ============================================================
+2025-11-01 13:09:53 [INFO] __main__: Application terminated
+2025-11-01 13:09:53 [INFO] __main__: ============================================================

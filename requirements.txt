@@ -1,0 +1,14 @@
+# TinkerCAD to ThingsBoard Bridge - Python Dependencies
+
+# Web automation
+playwright==1.48.0
+
+# HTTP requests
+requests==2.32.3
+
+# Environment variables (optional, for .env file support)
+python-dotenv==1.0.1
+
+# Additional useful packages
+urllib3==2.2.3
+certifi==2024.8.30

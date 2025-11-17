@@ -1,0 +1,96 @@
+2025-11-12 18:23:43 [INFO] __main__: ============================================================
+2025-11-12 18:23:43 [INFO] __main__: SMART IRRIGATION SYSTEM - TINKERCAD TO THINGSBOARD BRIDGE
+2025-11-12 18:23:43 [INFO] __main__: ============================================================
+2025-11-12 18:23:43 [INFO] __main__: Started at: 2025-11-12 18:23:43
+2025-11-12 18:23:43 [INFO] __main__: Log file: C:\Users\krzor\Desktop\irrigation last bridge\logs\bridge_20588.log
+2025-11-12 18:23:43 [INFO] __main__: ============================================================
+2025-11-12 18:23:43 [INFO] __main__: Starting Smart Irrigation Bridge...
+2025-11-12 18:23:43 [INFO] __main__: Initializing components...
+2025-11-12 18:23:43 [INFO] thingsboard_client: ThingsBoard client initialized: https://eu.thingsboard.cloud
+2025-11-12 18:23:43 [INFO] thingsboard_client: Telemetry endpoint: https://eu.thingsboard.cloud/api/v1/9CHMtFJbaOCWB7p96XmC/telemetry
+2025-11-12 18:23:43 [INFO] data_processor: Data processor initialized
+2025-11-12 18:23:43 [INFO] thingsboard_client: Testing ThingsBoard connection...
+2025-11-12 18:23:44 [INFO] thingsboard_client: ✓ ThingsBoard connection successful
+2025-11-12 18:23:44 [INFO] __main__: Starting browser automation...
+2025-11-12 18:23:49 [INFO] browser_automation: TinkerCAD automation initialized
+2025-11-12 18:23:49 [INFO] browser_automation: Navigating to TinkerCAD...
+2025-11-12 18:23:49 [INFO] browser_automation: Circuit URL: https://www.tinkercad.com/things/hTrSolRa4D1-smooth-jaiks-borwo/editel?returnTo=https%3A%2F%2Fwww.tinkercad.com%2Fdashboard%2Fdesigns%2Fcircuits&sharecode=WyCaIdMpHj_ctZyKmGF_-gRhH7uQz4xmHD_nGaFIFyM
+2025-11-12 18:23:52 [INFO] browser_automation: Attempting login...
+2025-11-12 18:24:01 [INFO] browser_automation: Waiting for login to complete...
+2025-11-12 18:24:06 [INFO] browser_automation: Navigating to circuit after login...
+2025-11-12 18:24:10 [INFO] browser_automation: ✓ Login successful and navigated to circuit
+2025-11-12 18:24:10 [INFO] browser_automation: Setting up simulation environment...
+2025-11-12 18:24:16 [INFO] browser_automation: ✓ Simulation setup complete
+2025-11-12 18:24:16 [INFO] __main__: Opening ThingsBoard dashboard...
+2025-11-12 18:24:17 [INFO] __main__: ✓ Dashboard opened: https://eu.thingsboard.cloud/dashboards/all/6e1fdde0-a387-11f0-89a6-d5955492b887
+2025-11-12 18:24:17 [INFO] browser_automation: Serial monitor initialized
+2025-11-12 18:24:17 [INFO] __main__: ============================================================
+2025-11-12 18:24:17 [INFO] __main__: BRIDGE ACTIVE - Monitoring serial output...
+2025-11-12 18:24:17 [INFO] __main__: Press Ctrl+C to stop
+2025-11-12 18:24:17 [INFO] __main__: ============================================================
+2025-11-12 18:24:38 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:24:42 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:24:46 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:24:54 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:24:58 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:25:02 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:25:06 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:25:10 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:25:14 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:25:21 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:25:33 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:25:39 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:25:45 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:25:58 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:26:04 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:26:08 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:26:14 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:26:18 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:26:23 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:26:27 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:26:33 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:26:41 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:26:45 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:26:48 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:26:53 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:27:02 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:27:06 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:27:12 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:27:15 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:27:22 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:27:30 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:27:42 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:27:45 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:27:48 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:27:53 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:28:01 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:28:05 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:28:09 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:28:13 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:28:16 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:28:21 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:28:25 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:28:31 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:28:37 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:28:42 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:28:45 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:28:52 [INFO] browser_automation: Simulation reset detected
+2025-11-12 18:28:57 [INFO] __main__: 
+============================================================
+2025-11-12 18:28:57 [INFO] __main__: Stopping bridge (Ctrl+C detected)
+2025-11-12 18:28:57 [INFO] __main__: ============================================================
+2025-11-12 18:28:57 [INFO] __main__: 
+Runtime: 279.6 seconds
+2025-11-12 18:28:57 [INFO] __main__: Messages sent: 323
+2025-11-12 18:28:57 [INFO] __main__: Average rate: 1.16 msg/s
+2025-11-12 18:28:57 [INFO] __main__: Cleaning up...
+2025-11-12 18:28:57 [INFO] browser_automation: Stopping simulation...
+2025-11-12 18:28:57 [WARNING] browser_automation: Error stopping simulation: Locator.click: Target page, context or browser has been closed
+Call log:
+  - waiting for locator("#SIMULATION_ID")
+
+2025-11-12 18:28:57 [INFO] __main__: ✓ Browser closed
+2025-11-12 18:28:57 [INFO] __main__: Bridge stopped successfully
+2025-11-12 18:28:57 [INFO] __main__: ============================================================
+2025-11-12 18:28:57 [INFO] __main__: Application terminated
+2025-11-12 18:28:57 [INFO] __main__: ============================================================

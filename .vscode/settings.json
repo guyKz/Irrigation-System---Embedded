@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "tinkercad": "c"
+        "tinkercad": "c",
+        "tinkercadwork": "c"
     }
 }

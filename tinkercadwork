@@ -1,37 +1,4 @@
-/*
- * ════════════════════════════════════════════════════════════════════
- * SMART IRRIGATION SYSTEM
- * ════════════════════════════════════════════════════════════════════
- * 
- * Description:
- *   Automated irrigation system with dual moisture sensors, adaptive
- *   thresholds, LCD display, and serial monitoring via JSON.
- * 
- * Features:
- *   - Dual-zone moisture monitoring
- *   - Automatic pump control with cooldown
- *   - Adaptive threshold adjustment
- *   - Emergency stop (80% moisture)
- *   - Watchdog timer safety
- *   - LCD status display (2 screens)
- *   - JSON telemetry output
- * 
- * Hardware:
- *   - Arduino Uno (ATmega328P)
- *   - 2x Moisture sensors (A0, A1)
- *   - Temperature sensor TMP36 (A2)
- *   - Light sensor (A3)
- *   - Servo motor (Pin 9)
- *   - Water pump relay (Pin 10)
- *   - LED indicator (Pin 13)
- *   - Buzzer (Pin 8)
- *   - LCD 16x2 (Pins 2-7)
- * 
- * Author: [Your Name]
- * Date: [Date]
- * Version: 1.0
- * ════════════════════════════════════════════════════════════════════
- */
+
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -39,9 +6,9 @@
 #include <LiquidCrystal.h>
 #include <Servo.h>
 
-// ════════════════════════════════════════════════════════════════════
+ 
 // HARDWARE CONFIGURATION
-// ════════════════════════════════════════════════════════════════════
+
 
 // ADC Channel Definitions
 #define MOISTURE_1_CH    0    // Analog pin A0 - Zone 1 moisture sensor
@@ -53,17 +20,16 @@
 #define SERVO_PIN        9    // PWM pin for servo motor (water valve)
 // Note: PORTB pins are used for pump, LED, and buzzer
 // PB0 (Pin 8)  - Buzzer
-// PB2 (Pin 10) - Water pump relay
+// PB2 (Pin 10) - Water pump relay(LED)
 // PB5 (Pin 13) - Status LED
 
 // LCD and Servo Objects
 LiquidCrystal lcd(7, 6, 5, 4, 3, 2);  // RS, E, D4, D5, D6, D7
 Servo waterValve;                      // Servo motor for water valve control
 
-// ════════════════════════════════════════════════════════════════════
+// 
 // GLOBAL VARIABLES - SENSOR DATA
-// ════════════════════════════════════════════════════════════════════
-// Note: Variables accessed by ISR must be marked 'volatile'
+// 
 
 volatile uint16_t moisture1 = 0;       // Zone 1 moisture level (0-100%)
 volatile uint16_t moisture2 = 0;       // Zone 2 moisture level (0-100%)
@@ -72,9 +38,9 @@ volatile int16_t temperature = 25;     // Temperature in Celsius (-40 to 125)
 volatile uint16_t lightLevel = 50;     // Light level (0-100%)
 volatile uint8_t waterLevel = 100;     // Water tank level (0-100%)
 
-// ════════════════════════════════════════════════════════════════════
+// 
 // GLOBAL VARIABLES - SYSTEM STATE
-// ════════════════════════════════════════════════════════════════════
+// 
 
 volatile bool pumpStatus = false;           // Pump on/off state
 volatile uint16_t irrigationCycles = 0;     // Total number of irrigation cycles
@@ -82,18 +48,17 @@ volatile uint16_t systemSeconds = 0;        // System uptime in seconds
 volatile uint16_t lastIrrigationStop = 0;   // Time when pump last stopped
 volatile uint8_t currentPumpDuration = 0;   // Current pump run duration (seconds)
 
-// ════════════════════════════════════════════════════════════════════
+// 
 // GLOBAL VARIABLES - CONFIGURATION PARAMETERS
-// ════════════════════════════════════════════════════════════════════
-// These values are adjusted by the adaptive algorithm
+// 
 
 uint8_t moistureThreshold = 40;   // Moisture level to trigger irrigation (%)
 uint8_t pumpDuration = 5;         // How long pump runs per cycle (seconds)
 uint8_t cooldownPeriod = 10;      // Minimum time between cycles (seconds)
 
-// ════════════════════════════════════════════════════════════════════
+// 
 // GLOBAL VARIABLES - ISR FLAGS & COUNTERS
-// ════════════════════════════════════════════════════════════════════
+// 
 
 volatile uint8_t isrFlags = 0;              // Bit flags for ISR events
 #define FLAG_ONE_SECOND  (1<<0)             // Bit 0: 1 second has elapsed
@@ -104,13 +69,12 @@ volatile uint16_t lcdUpdateCounter = 0;     // Counter for LCD updates (3s)
 volatile uint16_t wdtResetCounter = 0;      // Counter for watchdog resets (1s)
 volatile uint8_t lcdScreen = 0;             // Current LCD screen (0 or 1)
 
-// ════════════════════════════════════════════════════════════════════
+// 
 // HARDWARE INITIALIZATION
-// ════════════════════════════════════════════════════════════════════
+// 
 
-/**
- * Initialize digital output pins for pump, LED, and buzzer
- * Sets pins as outputs and ensures they start in OFF state
+/*
+  Sets pins as outputs and ensures they start in OFF state
  */
 void initPorts() {
     // Configure pins as outputs
@@ -123,26 +87,24 @@ void initPorts() {
     PORTB &= ~((1<<PB0) | (1<<PB2) | (1<<PB5));
 }
 
-/**
- * Initialize ADC (Analog to Digital Converter)
- * Configuration:
- *   - Reference voltage: AVCC (5V)
- *   - Prescaler: 128 (125 kHz ADC clock @ 16MHz)
- *   - Conversion time: ~104µs per reading
+/*
+  Initialize ADC (Analog to Digital Converter)
+  Configuration:
+     Reference voltage: AVCC (5V)
+     Prescaler: 128 (125 kHz ADC clock @ 16MHz)
  */
 void initADC() {
     ADMUX = (1<<REFS0);                                      // Use AVCC as reference
     ADCSRA = (1<<ADEN) | (1<<ADPS2) | (1<<ADPS1) | (1<<ADPS0); // Enable ADC, prescaler 128
 }
 
-/**
- * Initialize Timer2 for system timing
- * Configuration:
- *   - Mode: Normal (overflow)
- *   - Prescaler: 1024
- *   - Overflow frequency: ~61Hz 
- *   - 61 overflows = approximately 1 second
+/*
+     Mode: Normal (overflow)
+     Prescaler: 1024
+     Overflow frequency: ~61Hz 
+     61 overflows = approximately 1 second
  */
+
 void initTimer2() {
     TCCR2A = 0x00;                                // Normal mode
     TCCR2B = (1<<CS22) | (1<<CS21) | (1<<CS20);  // Prescaler 1024
@@ -150,11 +112,9 @@ void initTimer2() {
 }
 
 /**
- * Initialize Watchdog Timer for system safety
- * Configuration:
- *   - Timeout: ~2 seconds
- *   - Mode: Interrupt mode (not reset mode)
- *   - If system hangs, pump turns off automatically
+     Timeout: ~2 seconds
+     Mode: Interrupt mode
+     If system hangs, pump turns off automatically
  */
 void initWatchdog() {
     cli();                                        // Disable interrupts during setup
@@ -164,20 +124,19 @@ void initWatchdog() {
     sei();                                        // Re-enable interrupts
 }
 
-// ════════════════════════════════════════════════════════════════════
+// 
 // INTERRUPT SERVICE ROUTINES (ISRs)
-// ════════════════════════════════════════════════════════════════════
+// 
 
-/**
- * Timer2 Overflow Interrupt
- * Triggered every ~16ms (61 times per second)
- * 
- * Tasks:
- *   - Sets flag for sensor reading
- *   - Counts to 1 second
- *   - Updates pump duration counter
- *   - Resets watchdog timer
- * 
+/*
+  Timer2 Overflow Interrupt
+  Triggered  61 times per second
+  
+     Sets flag for sensor reading
+     Counts to 1 second
+     Updates pump duration counter
+     Resets watchdog timer
+  
  */
 ISR(TIMER2_OVF_vect) {
     // Signal that it's time to read sensors
@@ -207,14 +166,11 @@ ISR(TIMER2_OVF_vect) {
     }
 }
 
-/**
- * Watchdog Timer Interrupt
- * Triggered if system hangs for more than 2 seconds
- * 
- * Emergency Safety Function:
- *   - Immediately turns off pump
- *   - Prevents flooding if system crashes
- *   - Resets watchdog timer
+/*
+  Triggered if system hangs for more than 2 seconds
+  
+     Immediately turns off pump
+     Prevents flooding if system crashes
  */
 ISR(WDT_vect) {
     pumpStatus = false;           // Update pump state
@@ -222,17 +178,16 @@ ISR(WDT_vect) {
     wdt_reset();                  // Reset watchdog timer
 }
 
-// ════════════════════════════════════════════════════════════════════
+// 
 // SENSOR READING FUNCTIONS
-// ════════════════════════════════════════════════════════════════════
+// 
 
-/**
- * Read a single ADC channel (blocking)
- * 
- * @param channel ADC channel number (0-7)
- * @return Raw ADC value (0-1023)
- * 
- * Note: Takes ~104µs per conversion
+/*
+  Read a single ADC channel 
+  
+  channel - ADC channel number (0-7)
+  returns Raw ADC value (0-1023)
+  
  */
 uint16_t readADC(uint8_t channel) {
     ADMUX = (ADMUX & 0xF0) | (channel & 0x0F);  // Select channel, keep reference
@@ -241,9 +196,7 @@ uint16_t readADC(uint8_t channel) {
     return ADC;                                   // Return 10-bit result
 }
 
-/**
 
- */
 void updateSensors() {
     // Read all 4 analog sensors
     uint16_t raw1 = readADC(MOISTURE_1_CH);     // Zone 1 moisture
@@ -266,19 +219,18 @@ void updateSensors() {
     lightLevel = constrain(map(rawLight, 0, 1023, 0, 100), 0, 100);
 }
 
-// ════════════════════════════════════════════════════════════════════
+// 
 // IRRIGATION CONTROL FUNCTIONS
-// ════════════════════════════════════════════════════════════════════
+// 
 
-/**
- * Start irrigation cycle
- * 
- * Actions:
- *   - Turns on pump relay
- *   - Opens servo water valve
- *   - Activates status LED
- *   - Beeps buzzer (100ms)
- *   - Logs event to serial
+/*
+  Start irrigation cycle
+  
+     Turns on pump relay
+     Opens servo water valve
+     Activates status LED
+     Beeps buzzer (100ms)
+     Logs event to serial
  */
 void startIrrigation() {
     if (pumpStatus) return;  // Already running, do nothing
@@ -307,16 +259,15 @@ void startIrrigation() {
     Serial.println(moistureThreshold);
 }
 
-/**
+/*
  * Stop irrigation cycle
- * 
- * Actions:
- *   - Turns off pump relay
- *   - Closes servo water valve
- *   - Deactivates status LED
- *   - Beeps buzzer (100ms)
- *   - Records stop time
- *   - Logs event to serial
+  
+     Turns off pump relay
+     Closes servo water valve
+     Deactivates status LED
+     Beeps buzzer (100ms)
+     Records stop time
+     Logs event to serial
  */
 void stopIrrigation() {
     if (!pumpStatus) return;  // Already stopped, do nothing
@@ -341,15 +292,14 @@ void stopIrrigation() {
     Serial.println(waterLevel);
 }
 
-/**
- * Main irrigation control logic
- * Called every second from main loop
- * 
- * Decision tree:
- *   1. Emergency stop if moisture >= 80%
- *   2. If pump running: check duration and water level
- *   3. If pump stopped: check cooldown period
- *   4. Start pump if moisture < threshold and water available
+/*
+  Main irrigation control logic
+  Called every second from main loop
+  
+    1. Emergency stop if moisture >= 80%
+    2. If pump running: check duration and water level
+    3. If pump stopped: check cooldown period
+    4. Start pump if moisture < threshold and water available
  */
 void controlIrrigation() {
     // EMERGENCY: Stop pump if moisture too high (prevents flooding)
@@ -385,16 +335,16 @@ void controlIrrigation() {
     }
 }
 
-/**
+/*
  * Simulate water tank level changes
- * 
- * Consumption:
- *   - Pump ON: -2% per second
- * 
- * Refill:
- *   - Pump OFF: +2% every 3 seconds (auto-refill simulation)
- * 
- * Note: In real system, replace with actual tank sensor
+  
+  Consumption:
+     Pump ON: -2% per second
+  
+  Refill:
+     Pump OFF: +2% every 3 seconds
+  
+ 
  */
 void updateWaterLevel() {
     static uint16_t lastUpdate = 0;  // Last consumption update time
@@ -415,25 +365,25 @@ void updateWaterLevel() {
     }
 }
 
-/**
- * Adaptive parameter adjustment algorithm
- * Called every 10 seconds
- * 
- * Logic:
- *   - If moisture consistently high (>75%): increase threshold, reduce duration
- *   - If moisture consistently low (<55%): decrease threshold, increase duration
- * 
- * This allows the system to adapt to:
- *   - Different soil types
- *   - Seasonal variations
- *   - Sensor drift
+/*
+  Called every 10 seconds
+  
+  Logic:
+     If moisture consistently high (>75%): increase threshold, reduce duration
+     If moisture consistently low (<55%): decrease threshold, increase duration
+  
+  This allows the system to adapt to:
+     Different soil types
+     Seasonal variations
+     Sensor drift
  */
 void adaptParameters() {
     if (pumpStatus) return;  // Don't adjust while pump is running
     
     static uint16_t lastAdapt = 0;
     if (systemSeconds - lastAdapt < 10) return;  // Run every 10 seconds
-    lastAdapt = systemSeconds;
+    
+  	lastAdapt = systemSeconds;
     
     // Moisture too high: pump is running too often or too long
     if (avgMoisture > 75) {
@@ -444,7 +394,11 @@ void adaptParameters() {
             Serial.println(moistureThreshold);
         }
         // Reduce pump duration (less water per cycle)
-        if (pumpDuration > 3) pumpDuration--;
+        if (pumpDuration > 3)	{
+          		pumpDuration--;
+             	Serial.print("Pump Duration decreased to ");
+            	Serial.println(pumpDuration);
+        	}
     }
     // Moisture too low: pump not running enough or long enough
     else if (avgMoisture < 55) {
@@ -455,25 +409,29 @@ void adaptParameters() {
             Serial.println(moistureThreshold);
         }
         // Increase pump duration (more water per cycle)
-        if (pumpDuration < 10) pumpDuration++;
+      	if (pumpDuration < 10)	{ 
+        	pumpDuration++;
+          	Serial.print("Pump Duration increased to ");
+            Serial.println(pumpDuration);
+        }
     }
 }
 
-// ════════════════════════════════════════════════════════════════════
+// 
 // DISPLAY FUNCTIONS
-// ════════════════════════════════════════════════════════════════════
+// 
 
-/**
- * Update LCD display
- * Alternates between 2 screens every 3 seconds
- * 
- * Screen 0 (Overview):
- *   Line 1: Average moisture + Water level
- *   Line 2: Temperature + Light level
- * 
- * Screen 1 (Zones):
- *   Line 1: Zone 1 moisture
- *   Line 2: Zone 2 moisture
+/*
+  Update LCD display
+  Alternates between 2 screens every 3 seconds
+  
+  Screen 0:
+    Line 1: Average moisture + Water level
+    Line 2: Temperature + Light level
+  
+  Screen 1:
+    Line 1: Zone 1 moisture
+    Line 2: Zone 2 moisture
  */
 void updateLCD() {
     lcd.clear();
@@ -510,26 +468,17 @@ void updateLCD() {
     lcdScreen = (lcdScreen + 1) % 2;
 }
 
-/**
- * Send system telemetry as JSON
- * Transmitted every second via Serial (9600 baud)
- * 
- * JSON Format:
- * {
- *   "moist": 45,       // Average moisture (%)
- *   "temp": 23,        // Temperature (°C)
- *   "light": 60,       // Light level (%)
- *   "pump": "OFF",     // Pump status
- *   "servo": 0,        // Servo angle (degrees)
- *   "led": "OFF",      // LED status
- *   "water": 85,       // Water level (%)
- *   "thr": 40,         // Current threshold (%)
- *   "cycles": 3        // Total irrigation cycles
- * }
+/*
+  Send system telemetry as JSON
+  Transmitted every second via Serial (9600 baud)
  */
 void sendJSON() {
     Serial.print("{\"moist\":");
     Serial.print(avgMoisture);
+  	Serial.print(",\"zone1\":");
+    Serial.print(moisture1);           
+    Serial.print(",\"zone2\":");
+    Serial.print(moisture2);    
     Serial.print(",\"temp\":");
     Serial.print(temperature);
     Serial.print(",\"light\":");
@@ -549,17 +498,13 @@ void sendJSON() {
     Serial.println("}");
 }
 
-// ════════════════════════════════════════════════════════════════════
+// 
 // MAIN CONTROL LOGIC
-// ════════════════════════════════════════════════════════════════════
+// 
 
-/**
- * Handle ISR flags and execute corresponding tasks
- * 
- * This function is called continuously from loop()
- * It checks flags set by ISRs and performs the heavy work
- * 
- * Pattern: Short ISRs + Flag-based communication + Work in main loop
+/*
+  Handle ISR flags and execute corresponding tasks
+  This function is called continuously from loop() 
  */
 void handleISRFlags() {
     // Check if it's time to read sensors (~every 16ms)
@@ -637,14 +582,10 @@ void setup() {
     Serial.println();
 }
 
-/**
- * Main loop - runs continuously
- * 
- * This loop:
- *   1. Checks and handles ISR flags
- * 
- * Note: Most work happens in handleISRFlags(), which is triggered
- *       by Timer2 ISR 
+/*
+  
+    Checks and handles ISR flags
+  triggered by Timer2 ISR 
  */
 void loop() {
     handleISRFlags();  // Check flags and execute tasks

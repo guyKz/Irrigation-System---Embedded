@@ -19,7 +19,7 @@ TINKERCAD_LOGIN_CODE = os.getenv("TINKERCAD_LOGIN_CODE", "vladi")
 
 # ===== ThingsBoard Configuration =====
 TB_HOST = os.getenv("TB_HOST", "eu.thingsboard.cloud")
-TB_TOKEN = os.getenv("TB_TOKEN", "9CHMtFJbaOCWB7p96XmC").strip()
+TB_TOKEN = os.getenv("TB_TOKEN", "CY1zWMnlhydkKr0Hx9rG").strip()
 TB_DASHBOARD_URL = "https://eu.thingsboard.cloud/dashboards/all/6e1fdde0-a387-11f0-89a6-d5955492b887"
 USE_HTTPS = os.getenv("USE_HTTPS", "true").lower() == "true"
 

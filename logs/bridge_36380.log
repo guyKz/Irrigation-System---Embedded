@@ -1,0 +1,328 @@
+2025-11-26 17:46:47 [INFO] __main__: ============================================================
+2025-11-26 17:46:47 [INFO] __main__: SMART IRRIGATION SYSTEM - TINKERCAD TO THINGSBOARD BRIDGE
+2025-11-26 17:46:47 [INFO] __main__: ============================================================
+2025-11-26 17:46:47 [INFO] __main__: Started at: 2025-11-26 17:46:47
+2025-11-26 17:46:47 [INFO] __main__: Log file: C:\Users\krzor\Desktop\irrigation last bridge\logs\bridge_36380.log
+2025-11-26 17:46:47 [INFO] __main__: ============================================================
+2025-11-26 17:46:47 [INFO] __main__: Starting Smart Irrigation Bridge...
+2025-11-26 17:46:47 [INFO] __main__: Initializing components...
+2025-11-26 17:46:47 [INFO] thingsboard_client: ThingsBoard client initialized: https://eu.thingsboard.cloud
+2025-11-26 17:46:47 [INFO] thingsboard_client: Telemetry endpoint: https://eu.thingsboard.cloud/api/v1/9CHMtFJbaOCWB7p96XmC/telemetry
+2025-11-26 17:46:47 [INFO] data_processor: Data processor initialized
+2025-11-26 17:46:47 [INFO] thingsboard_client: Testing ThingsBoard connection...
+2025-11-26 17:46:48 [INFO] thingsboard_client: ✓ ThingsBoard connection successful
+2025-11-26 17:46:48 [INFO] __main__: Starting browser automation...
+2025-11-26 17:46:48 [INFO] browser_automation: TinkerCAD automation initialized
+2025-11-26 17:46:48 [INFO] browser_automation: Navigating to TinkerCAD...
+2025-11-26 17:46:48 [INFO] browser_automation: Circuit URL: https://www.tinkercad.com/things/hTrSolRa4D1-smooth-jaiks-borwo/editel?returnTo=https%3A%2F%2Fwww.tinkercad.com%2Fdashboard%2Fdesigns%2Fcircuits&sharecode=WyCaIdMpHj_ctZyKmGF_-gRhH7uQz4xmHD_nGaFIFyM
+2025-11-26 17:46:52 [INFO] browser_automation: Attempting login...
+2025-11-26 17:46:57 [INFO] browser_automation: Waiting for login to complete...
+2025-11-26 17:47:02 [INFO] browser_automation: Navigating to circuit after login...
+2025-11-26 17:47:06 [INFO] browser_automation: ✓ Login successful and navigated to circuit
+2025-11-26 17:47:06 [INFO] browser_automation: Setting up simulation environment...
+2025-11-26 17:47:12 [INFO] browser_automation: ✓ Simulation setup complete
+2025-11-26 17:47:12 [INFO] __main__: Opening ThingsBoard dashboard...
+2025-11-26 17:47:13 [INFO] __main__: ✓ Dashboard opened: https://eu.thingsboard.cloud/dashboards/all/6e1fdde0-a387-11f0-89a6-d5955492b887
+2025-11-26 17:47:13 [INFO] browser_automation: Serial monitor initialized
+2025-11-26 17:47:13 [INFO] __main__: ============================================================
+2025-11-26 17:47:13 [INFO] __main__: BRIDGE ACTIVE - Monitoring serial output...
+2025-11-26 17:47:13 [INFO] __main__: Press Ctrl+C to stop
+2025-11-26 17:47:13 [INFO] __main__: ============================================================
+2025-11-26 17:47:26 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:47:30 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:47:34 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:47:46 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:47:50 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:47:56 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:48:02 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:48:08 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:48:18 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:48:22 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:48:27 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:48:37 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:48:42 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:48:48 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:48:57 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:49:05 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:49:17 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:49:27 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:49:28 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:28 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:28 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:29 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:29 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:30 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:30 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:31 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:31 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:32 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:49:33 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:33 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:33 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:34 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:34 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:35 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:35 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:36 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:36 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:37 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:49:38 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:38 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:38 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:39 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:39 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:40 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:40 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:41 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:41 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:47 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:49:48 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:48 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:49 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:49 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:49 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:50 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:50 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:51 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:51 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:57 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:49:58 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:58 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:58 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:59 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:49:59 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:00 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:00 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:01 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:01 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:02 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:50:02 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:02 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:03 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:03 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:04 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:04 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:04 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:05 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:05 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:07 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:50:08 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:08 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:09 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:09 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:09 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:10 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:10 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:11 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:11 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:16 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:50:16 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:17 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:17 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:17 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:18 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:18 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:19 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:19 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:19 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:22 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:50:22 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:23 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:23 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:23 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:24 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:24 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:25 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:25 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:25 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:28 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:50:28 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:28 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:29 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:29 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:30 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:30 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:31 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:31 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:31 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:35 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:50:35 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:35 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:36 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:36 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:37 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:37 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:38 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:38 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:40 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:50:40 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:41 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:41 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:42 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:42 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:42 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:43 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:43 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:44 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:45 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:50:45 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:45 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:46 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:46 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:47 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:47 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:48 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:48 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:48 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:49 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:50:49 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:50 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:50 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:50 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:51 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:51 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:52 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:52 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:54 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:50:54 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:55 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:55 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:56 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:56 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:56 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:57 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:57 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:58 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:58 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:50:59 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:50:59 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:00 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:00 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:01 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:01 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:02 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:02 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:02 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:03 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:03 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:51:03 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:04 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:04 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:05 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:05 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:05 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:06 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:06 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:13 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:51:13 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:14 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:14 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:15 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:15 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:16 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:16 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:16 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:17 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:51:17 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:18 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:18 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:18 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:19 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:19 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:20 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:20 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:20 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:21 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:51:21 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:22 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:22 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:22 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:23 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:23 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:24 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:24 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:27 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:51:28 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:28 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:29 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:29 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:29 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:30 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:30 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:31 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:31 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:51:31 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:32 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:32 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:33 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:33 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:33 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:34 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:34 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:35 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:35 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:51:35 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:36 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:36 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:37 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:37 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:38 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:38 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:39 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:42 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:51:42 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:42 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:43 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:43 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:44 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:44 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:44 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:45 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:45 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:51:45 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:46 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:46 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:47 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:47 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:48 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:48 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:48 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:49 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:49 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:51:50 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:50 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:50 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:51 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:51 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:52 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:52 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:52 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:56 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:51:56 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:57 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:57 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:58 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:58 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:58 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:59 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:51:59 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:52:00 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:52:00 [INFO] __main__: 
+============================================================
+2025-11-26 17:52:00 [INFO] __main__: Stopping bridge (Ctrl+C detected)
+2025-11-26 17:52:00 [INFO] __main__: ============================================================
+2025-11-26 17:52:00 [INFO] __main__: 
+Runtime: 287.0 seconds
+2025-11-26 17:52:00 [INFO] __main__: Messages sent: 158
+2025-11-26 17:52:00 [INFO] __main__: Average rate: 0.55 msg/s
+2025-11-26 17:52:00 [INFO] __main__: Cleaning up...
+2025-11-26 17:52:00 [INFO] browser_automation: Stopping simulation...
+2025-11-26 17:52:00 [WARNING] browser_automation: Error stopping simulation: Locator.click: Target page, context or browser has been closed
+Call log:
+  - waiting for locator("#SIMULATION_ID")
+
+2025-11-26 17:52:00 [INFO] __main__: ✓ Browser closed
+2025-11-26 17:52:00 [INFO] __main__: Bridge stopped successfully
+2025-11-26 17:52:00 [INFO] __main__: ============================================================
+2025-11-26 17:52:00 [INFO] __main__: Application terminated
+2025-11-26 17:52:00 [INFO] __main__: ============================================================

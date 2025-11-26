@@ -1,0 +1,18 @@
+2025-11-26 17:52:40 [INFO] __main__: ============================================================
+2025-11-26 17:52:40 [INFO] __main__: SMART IRRIGATION SYSTEM - TINKERCAD TO THINGSBOARD BRIDGE
+2025-11-26 17:52:40 [INFO] __main__: ============================================================
+2025-11-26 17:52:40 [INFO] __main__: Started at: 2025-11-26 17:52:40
+2025-11-26 17:52:40 [INFO] __main__: Log file: C:\Users\krzor\Desktop\irrigation last bridge\logs\bridge_19272.log
+2025-11-26 17:52:40 [INFO] __main__: ============================================================
+2025-11-26 17:52:40 [INFO] __main__: Starting Smart Irrigation Bridge...
+2025-11-26 17:52:40 [INFO] __main__: Initializing components...
+2025-11-26 17:52:40 [INFO] thingsboard_client: ThingsBoard client initialized: https://eu.thingsboard.cloud
+2025-11-26 17:52:40 [INFO] thingsboard_client: Telemetry endpoint: https://eu.thingsboard.cloud/api/v1/9CHMtFJbaOCWB7p96XmC/telemetry
+2025-11-26 17:52:40 [INFO] data_processor: Data processor initialized
+2025-11-26 17:52:40 [INFO] thingsboard_client: Testing ThingsBoard connection...
+2025-11-26 17:52:40 [ERROR] thingsboard_client: ThingsBoard error: 401  - 
+2025-11-26 17:52:40 [ERROR] thingsboard_client: ✗ ThingsBoard connection failed
+2025-11-26 17:52:40 [ERROR] __main__: Failed to connect to ThingsBoard. Check your configuration.
+2025-11-26 17:52:40 [INFO] __main__: ============================================================
+2025-11-26 17:52:40 [INFO] __main__: Application terminated
+2025-11-26 17:52:40 [INFO] __main__: ============================================================

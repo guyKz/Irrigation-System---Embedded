@@ -1,0 +1,99 @@
+2025-11-26 17:03:41 [INFO] __main__: ============================================================
+2025-11-26 17:03:41 [INFO] __main__: SMART IRRIGATION SYSTEM - TINKERCAD TO THINGSBOARD BRIDGE
+2025-11-26 17:03:41 [INFO] __main__: ============================================================
+2025-11-26 17:03:41 [INFO] __main__: Started at: 2025-11-26 17:03:41
+2025-11-26 17:03:41 [INFO] __main__: Log file: C:\Users\krzor\Desktop\irrigation last bridge\logs\bridge_15076.log
+2025-11-26 17:03:41 [INFO] __main__: ============================================================
+2025-11-26 17:03:41 [INFO] __main__: Starting Smart Irrigation Bridge...
+2025-11-26 17:03:41 [INFO] __main__: Initializing components...
+2025-11-26 17:03:41 [INFO] thingsboard_client: ThingsBoard client initialized: https://eu.thingsboard.cloud
+2025-11-26 17:03:41 [INFO] thingsboard_client: Telemetry endpoint: https://eu.thingsboard.cloud/api/v1/9CHMtFJbaOCWB7p96XmC/telemetry
+2025-11-26 17:03:41 [INFO] data_processor: Data processor initialized
+2025-11-26 17:03:41 [INFO] thingsboard_client: Testing ThingsBoard connection...
+2025-11-26 17:03:41 [INFO] thingsboard_client: ✓ ThingsBoard connection successful
+2025-11-26 17:03:41 [INFO] __main__: Starting browser automation...
+2025-11-26 17:03:48 [INFO] browser_automation: TinkerCAD automation initialized
+2025-11-26 17:03:48 [INFO] browser_automation: Navigating to TinkerCAD...
+2025-11-26 17:03:48 [INFO] browser_automation: Circuit URL: https://www.tinkercad.com/things/hTrSolRa4D1-smooth-jaiks-borwo/editel?returnTo=https%3A%2F%2Fwww.tinkercad.com%2Fdashboard%2Fdesigns%2Fcircuits&sharecode=WyCaIdMpHj_ctZyKmGF_-gRhH7uQz4xmHD_nGaFIFyM
+2025-11-26 17:03:51 [INFO] browser_automation: Attempting login...
+2025-11-26 17:03:58 [INFO] browser_automation: Waiting for login to complete...
+2025-11-26 17:04:03 [INFO] browser_automation: Navigating to circuit after login...
+2025-11-26 17:04:06 [INFO] browser_automation: ✓ Login successful and navigated to circuit
+2025-11-26 17:04:06 [INFO] browser_automation: Setting up simulation environment...
+2025-11-26 17:04:13 [INFO] browser_automation: ✓ Simulation setup complete
+2025-11-26 17:04:13 [INFO] __main__: Opening ThingsBoard dashboard...
+2025-11-26 17:04:14 [INFO] __main__: ✓ Dashboard opened: https://eu.thingsboard.cloud/dashboards/all/6e1fdde0-a387-11f0-89a6-d5955492b887
+2025-11-26 17:04:14 [INFO] browser_automation: Serial monitor initialized
+2025-11-26 17:04:14 [INFO] __main__: ============================================================
+2025-11-26 17:04:14 [INFO] __main__: BRIDGE ACTIVE - Monitoring serial output...
+2025-11-26 17:04:14 [INFO] __main__: Press Ctrl+C to stop
+2025-11-26 17:04:14 [INFO] __main__: ============================================================
+2025-11-26 17:04:28 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:04:34 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:04:44 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:04:54 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:05:00 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:05:07 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:05:11 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:05:15 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:05:20 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:05:25 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:05:33 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:05:40 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:05:48 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:05:53 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:05:58 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:06:04 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:06:13 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:06:17 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:06:22 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:06:32 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:06:37 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:06:42 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:06:46 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:06:51 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:07:01 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:07:05 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:07:11 [INFO] __main__: 
+============================================================
+2025-11-26 17:07:11 [INFO] __main__: Stopping bridge (Ctrl+C detected)
+2025-11-26 17:07:11 [INFO] __main__: ============================================================
+2025-11-26 17:07:11 [INFO] __main__: 
+Runtime: 177.2 seconds
+2025-11-26 17:07:11 [INFO] __main__: Messages sent: 237
+2025-11-26 17:07:11 [INFO] __main__: Average rate: 1.34 msg/s
+2025-11-26 17:07:11 [INFO] __main__: Cleaning up...
+2025-11-26 17:07:11 [INFO] browser_automation: Stopping simulation...
+2025-11-26 17:07:11 [WARNING] browser_automation: Error stopping simulation: Locator.click: Target page, context or browser has been closed
+Call log:
+  - waiting for locator("#SIMULATION_ID")
+
+2025-11-26 17:07:11 [CRITICAL] __main__: Critical error: Browser.close: Connection closed while reading from the driver
+Traceback (most recent call last):
+  File "C:\Users\krzor\Desktop\irrigation last bridge\src\main.py", line 237, in main
+    success = run_bridge()
+  File "C:\Users\krzor\Desktop\irrigation last bridge\src\main.py", line 217, in run_bridge
+    browser.close()
+    ~~~~~~~~~~~~~^^
+  File "C:\Users\krzor\AppData\Local\Programs\Python\Python314\Lib\site-packages\playwright\sync_api\_generated.py", line 14269, in close
+    return mapping.from_maybe_impl(self._sync(self._impl_obj.close(reason=reason)))
+                                   ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\krzor\AppData\Local\Programs\Python\Python314\Lib\site-packages\playwright\_impl\_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "C:\Users\krzor\AppData\Local\Programs\Python\Python314\Lib\site-packages\playwright\_impl\_browser.py", line 241, in close
+    raise e
+  File "C:\Users\krzor\AppData\Local\Programs\Python\Python314\Lib\site-packages\playwright\_impl\_browser.py", line 238, in close
+    await self._channel.send("close", None, {"reason": reason})
+  File "C:\Users\krzor\AppData\Local\Programs\Python\Python314\Lib\site-packages\playwright\_impl\_connection.py", line 69, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "C:\Users\krzor\AppData\Local\Programs\Python\Python314\Lib\site-packages\playwright\_impl\_connection.py", line 558, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+Exception: Browser.close: Connection closed while reading from the driver
+2025-11-26 17:07:11 [INFO] __main__: ============================================================
+2025-11-26 17:07:11 [INFO] __main__: Application terminated
+2025-11-26 17:07:11 [INFO] __main__: ============================================================

@@ -1,0 +1,202 @@
+2025-11-26 17:54:56 [INFO] __main__: ============================================================
+2025-11-26 17:54:56 [INFO] __main__: SMART IRRIGATION SYSTEM - TINKERCAD TO THINGSBOARD BRIDGE
+2025-11-26 17:54:56 [INFO] __main__: ============================================================
+2025-11-26 17:54:56 [INFO] __main__: Started at: 2025-11-26 17:54:56
+2025-11-26 17:54:56 [INFO] __main__: Log file: C:\Users\krzor\Desktop\irrigation last bridge\logs\bridge_44360.log
+2025-11-26 17:54:56 [INFO] __main__: ============================================================
+2025-11-26 17:54:56 [INFO] __main__: Starting Smart Irrigation Bridge...
+2025-11-26 17:54:56 [INFO] __main__: Initializing components...
+2025-11-26 17:54:56 [INFO] thingsboard_client: ThingsBoard client initialized: https://eu.thingsboard.cloud
+2025-11-26 17:54:56 [INFO] thingsboard_client: Telemetry endpoint: https://eu.thingsboard.cloud/api/v1/CY1zWMnlhydkKr0Hx9rG/telemetry
+2025-11-26 17:54:56 [INFO] data_processor: Data processor initialized
+2025-11-26 17:54:56 [INFO] thingsboard_client: Testing ThingsBoard connection...
+2025-11-26 17:54:57 [INFO] thingsboard_client: ✓ ThingsBoard connection successful
+2025-11-26 17:54:57 [INFO] __main__: Starting browser automation...
+2025-11-26 17:54:58 [INFO] browser_automation: TinkerCAD automation initialized
+2025-11-26 17:54:58 [INFO] browser_automation: Navigating to TinkerCAD...
+2025-11-26 17:54:58 [INFO] browser_automation: Circuit URL: https://www.tinkercad.com/things/hTrSolRa4D1-smooth-jaiks-borwo/editel?returnTo=https%3A%2F%2Fwww.tinkercad.com%2Fdashboard%2Fdesigns%2Fcircuits&sharecode=WyCaIdMpHj_ctZyKmGF_-gRhH7uQz4xmHD_nGaFIFyM
+2025-11-26 17:55:00 [INFO] browser_automation: Attempting login...
+2025-11-26 17:55:07 [INFO] browser_automation: Waiting for login to complete...
+2025-11-26 17:55:12 [INFO] browser_automation: Navigating to circuit after login...
+2025-11-26 17:55:15 [INFO] browser_automation: ✓ Login successful and navigated to circuit
+2025-11-26 17:55:15 [INFO] browser_automation: Setting up simulation environment...
+2025-11-26 17:55:22 [INFO] browser_automation: ✓ Simulation setup complete
+2025-11-26 17:55:22 [INFO] __main__: Opening ThingsBoard dashboard...
+2025-11-26 17:55:22 [INFO] __main__: ✓ Dashboard opened: https://eu.thingsboard.cloud/dashboards/all/6e1fdde0-a387-11f0-89a6-d5955492b887
+2025-11-26 17:55:22 [INFO] browser_automation: Serial monitor initialized
+2025-11-26 17:55:22 [INFO] __main__: ============================================================
+2025-11-26 17:55:22 [INFO] __main__: BRIDGE ACTIVE - Monitoring serial output...
+2025-11-26 17:55:22 [INFO] __main__: Press Ctrl+C to stop
+2025-11-26 17:55:22 [INFO] __main__: ============================================================
+2025-11-26 17:55:39 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:55:44 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:55:47 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:55:52 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:56:04 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:56:10 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:56:24 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:56:30 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:56:35 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:56:45 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:57:32 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:59:19 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:59:27 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:59:51 [INFO] browser_automation: Simulation reset detected
+2025-11-26 17:59:57 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:01:05 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:02:22 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:02:40 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:03:14 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:03:52 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:04:11 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:05:44 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:06:59 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:07:07 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:07:36 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:08:21 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:08:26 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:08:31 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:08:36 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:08:42 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:08:51 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:08:58 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:09:08 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:09:13 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:09:18 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:09:24 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:09:31 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:09:36 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:09:41 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:09:45 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:09:49 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:09:53 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:09:59 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:10:03 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:10:09 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:10:15 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:10:22 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:10:30 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:10:37 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:10:48 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:10:58 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:11:15 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:11:54 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:12:59 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:13:55 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:14:03 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:14:10 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:14:16 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:14:22 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:14:29 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:14:35 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:14:45 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:14:56 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:15:20 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:16:02 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:17:22 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:17:56 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:18:13 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:18:35 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:18:38 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:18:45 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:18:56 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:19:06 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:19:16 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:19:27 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:19:33 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:19:42 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:19:47 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:19:51 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:19:59 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:20:03 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:20:09 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:20:18 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:20:24 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:20:34 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:20:38 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:20:44 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:20:48 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:20:52 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:21:02 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:21:10 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:21:20 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:21:30 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:21:40 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:21:50 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:22:00 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:22:10 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:22:14 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:22:18 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:22:23 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:22:28 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:22:33 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:22:40 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:22:44 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:22:49 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:22:53 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:22:58 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:23:04 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:23:10 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:23:18 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:23:23 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:23:28 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:23:39 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:23:43 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:23:50 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:23:54 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:24:02 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:24:07 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:24:11 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:24:17 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:24:24 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:24:33 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:24:37 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:24:41 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:24:45 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:24:49 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:24:55 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:24:59 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:25:05 [INFO] browser_automation: Simulation reset detected
+2025-11-26 18:29:35 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-26 18:29:36 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-26 18:29:36 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-26 18:29:36 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-26 18:29:37 [WARNING] browser_automation: Error reading serial output: Locator.inner_text: Target page, context or browser has been closed
+2025-11-26 18:29:37 [INFO] __main__: 
+============================================================
+2025-11-26 18:29:37 [INFO] __main__: Stopping bridge (Ctrl+C detected)
+2025-11-26 18:29:37 [INFO] __main__: ============================================================
+2025-11-26 18:29:37 [INFO] __main__: 
+Runtime: 2054.3 seconds
+2025-11-26 18:29:37 [INFO] __main__: Messages sent: 1071
+2025-11-26 18:29:37 [INFO] __main__: Average rate: 0.52 msg/s
+2025-11-26 18:29:37 [INFO] __main__: Cleaning up...
+2025-11-26 18:29:37 [INFO] browser_automation: Stopping simulation...
+2025-11-26 18:29:37 [WARNING] browser_automation: Error stopping simulation: Locator.click: Target page, context or browser has been closed
+2025-11-26 18:29:37 [CRITICAL] __main__: Critical error: BrowserContext.close: Target page, context or browser has been closed
+Traceback (most recent call last):
+  File "C:\Users\krzor\Desktop\irrigation last bridge\src\main.py", line 237, in main
+    success = run_bridge()
+  File "C:\Users\krzor\Desktop\irrigation last bridge\src\main.py", line 216, in run_bridge
+    context.close()
+    ~~~~~~~~~~~~~^^
+  File "C:\Users\krzor\AppData\Local\Programs\Python\Python314\Lib\site-packages\playwright\sync_api\_generated.py", line 13482, in close
+    return mapping.from_maybe_impl(self._sync(self._impl_obj.close(reason=reason)))
+                                   ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\krzor\AppData\Local\Programs\Python\Python314\Lib\site-packages\playwright\_impl\_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "C:\Users\krzor\AppData\Local\Programs\Python\Python314\Lib\site-packages\playwright\_impl\_browser_context.py", line 620, in close
+    await self._channel.send("close", None, {"reason": reason})
+  File "C:\Users\krzor\AppData\Local\Programs\Python\Python314\Lib\site-packages\playwright\_impl\_connection.py", line 69, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "C:\Users\krzor\AppData\Local\Programs\Python\Python314\Lib\site-packages\playwright\_impl\_connection.py", line 558, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.TargetClosedError: BrowserContext.close: Target page, context or browser has been closed
+2025-11-26 18:29:37 [INFO] __main__: ============================================================
+2025-11-26 18:29:37 [INFO] __main__: Application terminated
+2025-11-26 18:29:37 [INFO] __main__: ============================================================

@@ -1,5 +1,8 @@
-<img width="2190" height="1123" alt="image" src="https://github.com/user-attachments/assets/96e88e10-8ba4-4377-b7f5-91fb683cfc6a" />
+# Pictures:
 
+<img width="1000" height="423" alt="image" src="https://github.com/user-attachments/assets/96e88e10-8ba4-4377-b7f5-91fb683cfc6a" />
+<img width="1000" height="423" alt="image" src="https://github.com/user-attachments/assets/3433172b-f44f-43ba-91c2-290f504f3283" />
 
-<img width="2045" height="1049" alt="image" src="https://github.com/user-attachments/assets/3433172b-f44f-43ba-91c2-290f504f3283" />
-[![Video Demonstration](https://img.youtube.com/vi/_JMhm7tXVSc/0.jpg)](https://www.youtube.com/watch?v=_JMhm7tXVSc)
+# Video (click to redirect):
+
+[![Irrigation System Embedded Video](https://i.ibb.co/qZMPjwb/Screenshot-9.png)](hhttps://www.youtube.com/watch?v=_JMhm7tXVSc)

@@ -5,4 +5,4 @@
 
 # Video (click to redirect):
 
-[![Irrigation System Embedded Video](https://i.ibb.co/qZMPjwb/Screenshot-9.png)](hhttps://www.youtube.com/watch?v=_JMhm7tXVSc)
+[![Irrigation System Embedded Video](https://i.ibb.co/qZMPjwb/Screenshot-9.png)](https://www.youtube.com/watch?v=_JMhm7tXVSc)
